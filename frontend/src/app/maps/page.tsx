@@ -1,4 +1,4 @@
-export function Maps() {
+export default function Maps() {
   return (
     <div className="space-y-4">
       <h1 className="text-2xl font-bold">Maps</h1>

@@ -1,4 +1,4 @@
-export function Programs() {
+export default function Programs() {
   return (
     <div className="space-y-4">
       <h1 className="text-2xl font-bold">Programs</h1>

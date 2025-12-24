@@ -1,8 +1,0 @@
-export { Home } from './Home'
-export { Maps } from './Maps'
-export { Programs } from './Programs'
-export { Calendar } from './Calendar'
-export { Coaches } from './Coaches'
-export { Profile } from './Profile'
-export { Settings } from './Settings'
-export { HealthCheck } from './HealthCheck'

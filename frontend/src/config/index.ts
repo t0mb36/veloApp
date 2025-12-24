@@ -5,7 +5,7 @@ interface Config {
 }
 
 function getEnvVar(key: string, defaultValue?: string): string {
-  const value = import.meta.env[key] ?? defaultValue
+  const value = process.env[key] ?? defaultValue
   if (value === undefined) {
     throw new Error(`Missing required environment variable: ${key}`)
   }
@@ -13,7 +13,7 @@ function getEnvVar(key: string, defaultValue?: string): string {
 }
 
 export const config: Config = {
-  apiBaseUrl: getEnvVar('VITE_API_BASE_URL', 'http://localhost:8000'),
-  appName: getEnvVar('VITE_APP_NAME', 'Velo App'),
-  environment: getEnvVar('VITE_ENVIRONMENT', 'development') as Config['environment'],
+  apiBaseUrl: getEnvVar('NEXT_PUBLIC_API_URL', 'http://localhost:8000'),
+  appName: getEnvVar('NEXT_PUBLIC_APP_NAME', 'Velo App'),
+  environment: getEnvVar('NEXT_PUBLIC_ENVIRONMENT', 'development') as Config['environment'],
 }

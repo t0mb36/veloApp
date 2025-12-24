@@ -1,3 +1,5 @@
+'use client'
+
 import { useState, useEffect, useCallback } from 'react'
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -9,7 +11,7 @@ interface HealthStatus {
   timestamp: string
 }
 
-export function HealthCheck() {
+export default function HealthCheck() {
   const [status, setStatus] = useState<HealthStatus>({
     frontend: 'healthy',
     api: 'checking',
@@ -71,7 +73,7 @@ export function HealthCheck() {
               <span className="font-medium">API</span>
               <span className={getStatusColor(status.api)}>{status.api}</span>
             </div>
-            <div className="text-muted-foreground flex items-center justify-between text-sm">
+            <div className="flex items-center justify-between text-sm text-muted-foreground">
               <span>Last checked</span>
               <span>{new Date(status.timestamp).toLocaleTimeString()}</span>
             </div>
@@ -83,7 +85,7 @@ export function HealthCheck() {
             </Button>
           </div>
 
-          <div className="text-muted-foreground text-xs">
+          <div className="text-xs text-muted-foreground">
             <p>API Base URL: {config.apiBaseUrl}</p>
           </div>
         </CardContent>

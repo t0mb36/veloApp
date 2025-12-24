@@ -1,13 +1,14 @@
-import type { ReactNode } from 'react'
-import { Sidebar } from './Sidebar'
+'use client'
+
+import { Sidebar } from './sidebar'
 
 interface AppLayoutProps {
-  children: ReactNode
+  children: React.ReactNode
 }
 
 export function AppLayout({ children }: AppLayoutProps) {
   return (
-    <div className="bg-background flex h-screen overflow-hidden">
+    <div className="flex h-screen overflow-hidden bg-background">
       <Sidebar />
       <main className="flex-1 overflow-auto">
         <div className="h-full p-6">{children}</div>

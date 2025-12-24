@@ -116,3 +116,5 @@ coverage.xml
 *~
 .cache/
 
+#old directories
+frontend-backup/

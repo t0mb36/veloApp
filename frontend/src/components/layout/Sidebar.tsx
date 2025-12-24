@@ -1,4 +1,7 @@
-import { NavLink } from 'react-router-dom'
+'use client'
+
+import Link from 'next/link'
+import { usePathname } from 'next/navigation'
 import { cn } from '@/lib/utils'
 import { Separator } from '@/components/ui/separator'
 import { Home, Map, BookOpen, Calendar, Users, User, Settings } from 'lucide-react'
@@ -57,11 +60,14 @@ interface SidebarProps {
 export function Sidebar({ className }: SidebarProps) {
   return (
     <aside
-      className={cn('bg-background border-border flex h-screen w-40 flex-col border-r', className)}
+      className={cn(
+        'flex h-screen w-40 flex-col border-r border-border bg-background',
+        className
+      )}
     >
       {/* Logo */}
-      <div className="border-border flex h-16 items-center justify-center border-b">
-        <div className="bg-primary text-primary-foreground flex h-10 w-10 items-center justify-center rounded-xl">
+      <div className="flex h-16 items-center justify-center border-b border-border">
+        <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary text-primary-foreground">
           <span className="text-lg font-bold">V</span>
         </div>
       </div>
@@ -90,20 +96,20 @@ interface NavItemComponentProps {
 }
 
 function NavItemComponent({ item }: NavItemComponentProps) {
+  const pathname = usePathname()
+  const isActive = item.href === '/' ? pathname === '/' : pathname.startsWith(item.href)
+
   return (
-    <NavLink
-      to={item.href}
-      end={item.href === '/'}
-      className={({ isActive }) =>
-        cn(
-          'flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors',
-          'hover:bg-accent hover:text-accent-foreground',
-          isActive ? 'bg-accent text-accent-foreground' : 'text-muted-foreground'
-        )
-      }
+    <Link
+      href={item.href}
+      className={cn(
+        'flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors',
+        'hover:bg-accent hover:text-accent-foreground',
+        isActive ? 'bg-accent text-accent-foreground' : 'text-muted-foreground'
+      )}
     >
       {item.icon}
       <span>{item.title}</span>
-    </NavLink>
+    </Link>
   )
 }
