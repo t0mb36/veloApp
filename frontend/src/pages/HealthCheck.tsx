@@ -1,7 +1,6 @@
 import { useState, useEffect, useCallback } from 'react'
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
 import { config } from '@/config'
 
 interface HealthStatus {
@@ -16,7 +15,6 @@ export function HealthCheck() {
     api: 'checking',
     timestamp: new Date().toISOString(),
   })
-  const [inputValue, setInputValue] = useState('')
 
   const checkApiHealth = useCallback(async () => {
     setStatus((prev) => ({ ...prev, api: 'checking' }))
@@ -37,7 +35,6 @@ export function HealthCheck() {
   }, [])
 
   useEffect(() => {
-    // Fetch API health on component mount
     // eslint-disable-next-line react-hooks/set-state-in-effect
     checkApiHealth()
   }, [checkApiHealth])
@@ -56,7 +53,7 @@ export function HealthCheck() {
   }
 
   return (
-    <div className="bg-background flex min-h-screen items-center justify-center p-4">
+    <div className="flex items-center justify-center p-4">
       <Card className="w-full max-w-md">
         <CardHeader>
           <CardTitle>Health Check</CardTitle>
@@ -80,19 +77,13 @@ export function HealthCheck() {
             </div>
           </div>
 
-          <div className="border-t pt-4">
-            <p className="text-muted-foreground mb-2 text-sm">Component Test</p>
-            <div className="flex gap-2">
-              <Input
-                placeholder="Type something..."
-                value={inputValue}
-                onChange={(e) => setInputValue(e.target.value)}
-              />
-              <Button onClick={checkApiHealth}>Refresh</Button>
-            </div>
+          <div className="flex justify-end border-t pt-4">
+            <Button onClick={checkApiHealth} variant="outline" size="sm">
+              Refresh
+            </Button>
           </div>
 
-          <div className="text-muted-foreground border-t pt-4 text-xs">
+          <div className="text-muted-foreground text-xs">
             <p>API Base URL: {config.apiBaseUrl}</p>
           </div>
         </CardContent>
