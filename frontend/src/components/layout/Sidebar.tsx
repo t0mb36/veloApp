@@ -1,10 +1,11 @@
 'use client'
 
 import Link from 'next/link'
-import { usePathname } from 'next/navigation'
+import { usePathname, useRouter } from 'next/navigation'
 import { cn } from '@/lib/utils'
 import { Separator } from '@/components/ui/separator'
-import { Home, Map, BookOpen, Calendar, Users, User, Settings } from 'lucide-react'
+import { Home, Map, BookOpen, Calendar, Users, User, Settings, LogOut } from 'lucide-react'
+import { useAuthContext } from '@/contexts/auth-context'
 
 interface NavItem {
   title: string
@@ -58,6 +59,14 @@ interface SidebarProps {
 }
 
 export function Sidebar({ className }: SidebarProps) {
+  const router = useRouter()
+  const { logout } = useAuthContext()
+
+  const handleLogout = async () => {
+    await logout()
+    router.push('/login')
+  }
+
   return (
     <aside
       className={cn(
@@ -86,6 +95,17 @@ export function Sidebar({ className }: SidebarProps) {
         {bottomNavItems.map((item) => (
           <NavItemComponent key={item.href} item={item} />
         ))}
+        <button
+          onClick={handleLogout}
+          className={cn(
+            'flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors cursor-pointer',
+            'hover:bg-accent hover:text-accent-foreground',
+            'text-muted-foreground'
+          )}
+        >
+          <LogOut className="h-5 w-5" />
+          <span>Logout</span>
+        </button>
       </nav>
     </aside>
   )

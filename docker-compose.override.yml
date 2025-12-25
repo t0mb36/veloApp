@@ -7,6 +7,12 @@ services:
       target: development
     environment:
       DEBUG: "true"
+      # Firebase vars inherited from root docker-compose.yml
+      # but we need to ensure they're passed through in dev mode
+      FIREBASE_PROJECT_ID: ${FIREBASE_PROJECT_ID:-}
+      FIREBASE_CLIENT_EMAIL: ${FIREBASE_CLIENT_EMAIL:-}
+      FIREBASE_PRIVATE_KEY: ${FIREBASE_PRIVATE_KEY:-}
+      SESSION_COOKIE_EXPIRY_DAYS: ${SESSION_COOKIE_EXPIRY_DAYS:-7}
     volumes:
       - ./backend/app:/app/app:cached
     command: ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
@@ -28,6 +34,12 @@ services:
     environment:
       - NODE_ENV=development
       - NEXT_PUBLIC_API_URL=http://localhost:8000
+      # Server-side only - used by API routes to proxy to backend
+      - BACKEND_URL=http://velo-backend:8000
+      # Firebase Client SDK (must be NEXT_PUBLIC_ for client-side access)
+      - NEXT_PUBLIC_FIREBASE_API_KEY=${NEXT_PUBLIC_FIREBASE_API_KEY}
+      - NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=${NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN}
+      - NEXT_PUBLIC_FIREBASE_PROJECT_ID=${NEXT_PUBLIC_FIREBASE_PROJECT_ID}
     ports:
       - "${FRONTEND_PORT:-3000}:3000"
     command: ["npm", "run", "dev"]

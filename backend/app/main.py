@@ -7,6 +7,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.api.router import api_router
 from app.api.routes.health import router as health_router
 from app.core.config import get_settings
+from app.db.init import init_db
 
 settings = get_settings()
 
@@ -14,7 +15,8 @@ settings = get_settings()
 @asynccontextmanager
 async def lifespan(_app: FastAPI) -> AsyncGenerator[None, None]:
     """Application lifespan handler for startup and shutdown events."""
-    # Startup
+    # Startup: Initialize database tables
+    await init_db()
     yield
     # Shutdown
 

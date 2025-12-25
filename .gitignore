@@ -31,6 +31,9 @@ Thumbs.db
 .env.development.local
 .env.test.local
 .env.production.local
+*/frontend/.env*
+*/backend/.env*
+
 
 # Python
 __pycache__/

@@ -1,4 +1,4 @@
-.PHONY: dev build up down logs logs-backend logs-frontend shell-backend shell-frontend clean restart help
+.PHONY: dev build up down logs logs-backend logs-frontend shell-backend shell-frontend clean restart help rebuild-backend rebuild-frontend
 
 # Default target
 .DEFAULT_GOAL := help
@@ -15,6 +15,8 @@ help:
 	@echo ""
 	@echo "$(GREEN)Development:$(RESET)"
 	@echo "  make dev              Start all services in development mode (with hot reload)"
+	@echo "  make rebuild-backend  Rebuild and restart backend container"
+	@echo "  make rebuild-frontend Rebuild and restart frontend container"
 	@echo ""
 	@echo "$(GREEN)Production:$(RESET)"
 	@echo "  make build            Build all containers"
@@ -95,3 +97,15 @@ clean:
 restart:
 	@echo "$(CYAN)Restarting all services...$(RESET)"
 	docker compose restart
+
+## rebuild-backend: Rebuild and restart the backend container
+rebuild-backend:
+	@echo "$(CYAN)Rebuilding backend...$(RESET)"
+	docker compose up -d --build --no-deps backend
+	@echo "$(GREEN)Backend rebuilt and restarted.$(RESET)"
+
+## rebuild-frontend: Rebuild and restart the frontend container
+rebuild-frontend:
+	@echo "$(CYAN)Rebuilding frontend...$(RESET)"
+	docker compose up -d --build --no-deps frontend
+	@echo "$(GREEN)Frontend rebuilt and restarted.$(RESET)"

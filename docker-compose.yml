@@ -30,9 +30,14 @@ services:
       APP_NAME: ${APP_NAME:-VeloApp API}
       DEBUG: ${DEBUG:-false}
       API_PREFIX: ${API_PREFIX:-/api}
-      CORS_ORIGINS: ${CORS_ORIGINS}
+      CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost:3000}
       HOST: 0.0.0.0
       PORT: 8000
+      # Firebase Admin SDK credentials
+      FIREBASE_PROJECT_ID: ${FIREBASE_PROJECT_ID:-}
+      FIREBASE_CLIENT_EMAIL: ${FIREBASE_CLIENT_EMAIL:-}
+      FIREBASE_PRIVATE_KEY: ${FIREBASE_PRIVATE_KEY:-}
+      SESSION_COOKIE_EXPIRY_DAYS: ${SESSION_COOKIE_EXPIRY_DAYS:-7}
     ports:
       - "${BACKEND_PORT:-8000}:8000"
     networks:
@@ -52,13 +57,19 @@ services:
       context: ./frontend
       dockerfile: Dockerfile
       target: runner
+      args:
+        # Build-time args for Next.js (NEXT_PUBLIC_* must be set at build time)
+        NEXT_PUBLIC_FIREBASE_API_KEY: ${NEXT_PUBLIC_FIREBASE_API_KEY:-}
+        NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN: ${NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN:-}
+        NEXT_PUBLIC_FIREBASE_PROJECT_ID: ${NEXT_PUBLIC_FIREBASE_PROJECT_ID:-}
     container_name: velo-frontend
     restart: unless-stopped
     ports:
       - "${FRONTEND_PORT:-3000}:3000"
     environment:
-      - NODE_ENV=production
-      - NEXT_PUBLIC_API_URL=http://velo-backend:8000
+      NODE_ENV: production
+      # Server-side only - used by API routes to proxy to backend
+      BACKEND_URL: http://velo-backend:8000
     networks:
       - velo-network
     depends_on:
