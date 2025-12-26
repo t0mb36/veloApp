@@ -140,13 +140,10 @@ export default function ProfilePage() {
   const [newService, setNewService] = useState('')
   const [showSpecialtyPicker, setShowSpecialtyPicker] = useState(false)
 
-  // Pre-populate email from Firebase Auth
+  // Pre-populate email from user data
   useEffect(() => {
     if (user?.email) {
       setProfile((prev) => ({ ...prev, email: user.email || '' }))
-    }
-    if (user?.photoURL) {
-      setProfile((prev) => ({ ...prev, profileImage: user.photoURL || null }))
     }
   }, [user])
 
@@ -203,9 +200,13 @@ export default function ProfilePage() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-xl sm:text-2xl font-bold">Coach Profile</h1>
+          <h1 className="text-xl sm:text-2xl font-bold">
+            {viewMode === 'coach' ? 'Coach Profile' : 'Student Profile'}
+          </h1>
           <p className="text-sm text-muted-foreground">
-            Manage your public profile information
+            {viewMode === 'coach'
+              ? 'Manage your public coaching profile'
+              : 'Manage your personal information'}
           </p>
         </div>
         <Button onClick={handleSave} className="gap-2 w-full sm:w-auto">
@@ -313,7 +314,11 @@ export default function ProfilePage() {
             <Label htmlFor="bio">Bio</Label>
             <Textarea
               id="bio"
-              placeholder="Tell potential students about yourself, your experience, and coaching philosophy..."
+              placeholder={
+                viewMode === 'coach'
+                  ? 'Tell potential students about yourself, your experience, and coaching philosophy...'
+                  : 'Tell us a bit about yourself and your athletic interests...'
+              }
               value={profile.bio}
               onChange={(e) => handleInputChange('bio', e.target.value)}
               rows={4}
@@ -384,129 +389,129 @@ export default function ProfilePage() {
             </div>
           </div>
 
-          <Separator />
-
-          {/* Specialties & Services Section */}
-          <div className="space-y-6">
-            <div className="flex items-center gap-2">
-              <Briefcase className="h-5 w-5" />
-              <Label className="text-base font-semibold">Specialties & Services</Label>
-            </div>
-
-            {/* Specialties */}
-            <div className="space-y-3">
-              <Label>Specialties</Label>
-              <div className="flex flex-wrap gap-2">
-                {profile.specialties.map((specialty) => (
-                  <Badge
-                    key={specialty}
-                    variant="secondary"
-                    className="gap-1 pr-1"
-                  >
-                    {specialty}
-                    <button
-                      onClick={() => handleRemoveSpecialty(specialty)}
-                      className="ml-1 rounded-full p-0.5 hover:bg-muted-foreground/20"
-                    >
-                      <X className="h-3 w-3" />
-                    </button>
-                  </Badge>
-                ))}
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setShowSpecialtyPicker(!showSpecialtyPicker)}
-                  className="h-6 gap-1 text-xs"
-                >
-                  <Plus className="h-3 w-3" />
-                  Add
-                </Button>
-              </div>
-              {showSpecialtyPicker && (
-                <div className="rounded-lg border p-3 mt-2">
-                  <p className="text-sm font-medium mb-2">Select specialties:</p>
-                  <div className="flex flex-wrap gap-2">
-                    {availableSpecialties
-                      .filter((s) => !profile.specialties.includes(s))
-                      .map((specialty) => (
-                        <Badge
-                          key={specialty}
-                          variant="outline"
-                          className="cursor-pointer hover:bg-accent"
-                          onClick={() => handleAddSpecialty(specialty)}
-                        >
-                          {specialty}
-                        </Badge>
-                      ))}
-                  </div>
-                </div>
-              )}
-            </div>
-
-            {/* Services Offered */}
-            <div className="space-y-3">
-              <Label>Services Offered</Label>
-              <div className="flex flex-wrap gap-2">
-                {profile.services.map((service) => (
-                  <Badge
-                    key={service}
-                    variant="secondary"
-                    className="gap-1 pr-1"
-                  >
-                    {service}
-                    <button
-                      onClick={() => handleRemoveService(service)}
-                      className="ml-1 rounded-full p-0.5 hover:bg-muted-foreground/20"
-                    >
-                      <X className="h-3 w-3" />
-                    </button>
-                  </Badge>
-                ))}
-              </div>
-              <div className="flex flex-col sm:flex-row gap-2">
-                <Input
-                  placeholder="e.g., Private lessons, Group classes"
-                  value={newService}
-                  onChange={(e) => setNewService(e.target.value)}
-                  onKeyDown={(e) => e.key === 'Enter' && handleAddService()}
-                />
-                <Button
-                  variant="outline"
-                  onClick={handleAddService}
-                  disabled={!newService.trim()}
-                  className="sm:w-auto"
-                >
-                  <Plus className="h-4 w-4 mr-1 sm:mr-0" />
-                  <span className="sm:hidden">Add Service</span>
-                </Button>
-              </div>
-            </div>
-
-            {/* Hourly Rate */}
-            <div className="space-y-2">
-              <Label htmlFor="hourlyRate">Hourly Rate</Label>
-              <div className="relative w-full sm:w-48">
-                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">
-                  $
-                </span>
-                <Input
-                  id="hourlyRate"
-                  type="number"
-                  placeholder="0"
-                  value={profile.hourlyRate}
-                  onChange={(e) => handleInputChange('hourlyRate', e.target.value)}
-                  className="pl-7"
-                />
-                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">
-                  /hr
-                </span>
-              </div>
-            </div>
-          </div>
-
-          {/* Reviews Section - Only visible in Coach mode */}
+          {/* Specialties & Services Section - Only visible for coaches */}
           {viewMode === 'coach' && (
             <>
+              <Separator />
+
+              <div className="space-y-6">
+                <div className="flex items-center gap-2">
+                  <Briefcase className="h-5 w-5" />
+                  <Label className="text-base font-semibold">Specialties & Services</Label>
+                </div>
+
+                {/* Specialties */}
+                <div className="space-y-3">
+                  <Label>Specialties</Label>
+                  <div className="flex flex-wrap gap-2">
+                    {profile.specialties.map((specialty) => (
+                      <Badge
+                        key={specialty}
+                        variant="secondary"
+                        className="gap-1 pr-1"
+                      >
+                        {specialty}
+                        <button
+                          onClick={() => handleRemoveSpecialty(specialty)}
+                          className="ml-1 rounded-full p-0.5 hover:bg-muted-foreground/20"
+                        >
+                          <X className="h-3 w-3" />
+                        </button>
+                      </Badge>
+                    ))}
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setShowSpecialtyPicker(!showSpecialtyPicker)}
+                      className="h-6 gap-1 text-xs"
+                    >
+                      <Plus className="h-3 w-3" />
+                      Add
+                    </Button>
+                  </div>
+                  {showSpecialtyPicker && (
+                    <div className="rounded-lg border p-3 mt-2">
+                      <p className="text-sm font-medium mb-2">Select specialties:</p>
+                      <div className="flex flex-wrap gap-2">
+                        {availableSpecialties
+                          .filter((s) => !profile.specialties.includes(s))
+                          .map((specialty) => (
+                            <Badge
+                              key={specialty}
+                              variant="outline"
+                              className="cursor-pointer hover:bg-accent"
+                              onClick={() => handleAddSpecialty(specialty)}
+                            >
+                              {specialty}
+                            </Badge>
+                          ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {/* Services Offered */}
+                <div className="space-y-3">
+                  <Label>Services Offered</Label>
+                  <div className="flex flex-wrap gap-2">
+                    {profile.services.map((service) => (
+                      <Badge
+                        key={service}
+                        variant="secondary"
+                        className="gap-1 pr-1"
+                      >
+                        {service}
+                        <button
+                          onClick={() => handleRemoveService(service)}
+                          className="ml-1 rounded-full p-0.5 hover:bg-muted-foreground/20"
+                        >
+                          <X className="h-3 w-3" />
+                        </button>
+                      </Badge>
+                    ))}
+                  </div>
+                  <div className="flex flex-col sm:flex-row gap-2">
+                    <Input
+                      placeholder="e.g., Private lessons, Group classes"
+                      value={newService}
+                      onChange={(e) => setNewService(e.target.value)}
+                      onKeyDown={(e) => e.key === 'Enter' && handleAddService()}
+                    />
+                    <Button
+                      variant="outline"
+                      onClick={handleAddService}
+                      disabled={!newService.trim()}
+                      className="sm:w-auto"
+                    >
+                      <Plus className="h-4 w-4 mr-1 sm:mr-0" />
+                      <span className="sm:hidden">Add Service</span>
+                    </Button>
+                  </div>
+                </div>
+
+                {/* Hourly Rate */}
+                <div className="space-y-2">
+                  <Label htmlFor="hourlyRate">Hourly Rate</Label>
+                  <div className="relative w-full sm:w-48">
+                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">
+                      $
+                    </span>
+                    <Input
+                      id="hourlyRate"
+                      type="number"
+                      placeholder="0"
+                      value={profile.hourlyRate}
+                      onChange={(e) => handleInputChange('hourlyRate', e.target.value)}
+                      className="pl-7"
+                    />
+                    <span className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">
+                      /hr
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Reviews Section */}
               <Separator />
               <div className="space-y-4">
                 <div className="flex items-center justify-between">

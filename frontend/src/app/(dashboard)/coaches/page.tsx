@@ -1,17 +1,10 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
-import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from '@/components/ui/accordion'
 import {
   Search,
   Star,
@@ -21,6 +14,8 @@ import {
   Users,
   Filter,
   X,
+  ChevronLeft,
+  ChevronRight,
 } from 'lucide-react'
 import { useViewMode } from '@/contexts/view-mode-context'
 import { cn } from '@/lib/utils'
@@ -29,7 +24,7 @@ import { cn } from '@/lib/utils'
 interface Coach {
   id: string
   name: string
-  avatar?: string
+  image: string // Required for coaches
   specialties: string[]
   rating: number
   reviewCount: number
@@ -39,10 +34,12 @@ interface Coach {
   isYourCoach?: boolean
 }
 
+// Placeholder images using UI Avatars service (would be real photos in production)
 const mockYourCoaches: Coach[] = [
   {
     id: '1',
     name: 'Sarah Johnson',
+    image: 'https://images.unsplash.com/photo-1594381898411-846e7d193883?w=400&h=500&fit=crop',
     specialties: ['Tennis', 'Pickleball'],
     rating: 4.9,
     reviewCount: 47,
@@ -54,6 +51,7 @@ const mockYourCoaches: Coach[] = [
   {
     id: '2',
     name: 'Mike Chen',
+    image: 'https://images.unsplash.com/photo-1534438327276-14e5300c3a48?w=400&h=500&fit=crop',
     specialties: ['Basketball', 'Strength Training'],
     rating: 4.8,
     reviewCount: 32,
@@ -62,12 +60,25 @@ const mockYourCoaches: Coach[] = [
     bio: 'Certified personal trainer specializing in basketball performance.',
     isYourCoach: true,
   },
+  {
+    id: '7',
+    name: 'Rachel Kim',
+    image: 'https://images.unsplash.com/photo-1571019614242-c5c5dee9f50b?w=400&h=500&fit=crop',
+    specialties: ['Running', 'Marathon'],
+    rating: 4.9,
+    reviewCount: 38,
+    location: 'San Francisco, CA',
+    hourlyRate: 70,
+    bio: 'Boston Marathon qualifier and certified running coach.',
+    isYourCoach: true,
+  },
 ]
 
 const mockRecommendedCoaches: Coach[] = [
   {
     id: '3',
     name: 'Emily Davis',
+    image: 'https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=400&h=500&fit=crop',
     specialties: ['Swimming', 'Triathlon'],
     rating: 4.9,
     reviewCount: 58,
@@ -78,6 +89,7 @@ const mockRecommendedCoaches: Coach[] = [
   {
     id: '4',
     name: 'James Wilson',
+    image: 'https://images.unsplash.com/photo-1535131749006-b7f58c99034b?w=400&h=500&fit=crop',
     specialties: ['Golf'],
     rating: 4.7,
     reviewCount: 29,
@@ -88,6 +100,7 @@ const mockRecommendedCoaches: Coach[] = [
   {
     id: '5',
     name: 'Lisa Park',
+    image: 'https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?w=400&h=500&fit=crop',
     specialties: ['Yoga', 'Pilates'],
     rating: 5.0,
     reviewCount: 64,
@@ -98,6 +111,7 @@ const mockRecommendedCoaches: Coach[] = [
   {
     id: '6',
     name: 'David Martinez',
+    image: 'https://images.unsplash.com/photo-1549476464-37392f717541?w=400&h=500&fit=crop',
     specialties: ['Boxing', 'Martial Arts'],
     rating: 4.8,
     reviewCount: 41,
@@ -118,72 +132,127 @@ const sportFilters = [
   'Running',
 ]
 
-interface CoachCardProps {
+interface CoachTradingCardProps {
   coach: Coach
-  compact?: boolean
 }
 
-function CoachCard({ coach, compact = false }: CoachCardProps) {
-  const getInitials = (name: string) => {
-    return name
-      .split(' ')
-      .map((n) => n[0])
-      .join('')
-      .toUpperCase()
-  }
-
+// Trading card style component for "Your Coaches" carousel
+function CoachTradingCard({ coach }: CoachTradingCardProps) {
   return (
-    <Card className={cn('hover:shadow-md transition-shadow', compact && 'border-0 shadow-none')}>
-      <CardContent className={cn('p-4', compact && 'p-3')}>
-        <div className="flex gap-4">
-          <Avatar className={cn('h-16 w-16', compact && 'h-12 w-12')}>
-            <AvatarImage src={coach.avatar} />
-            <AvatarFallback className="bg-primary text-primary-foreground">
-              {getInitials(coach.name)}
-            </AvatarFallback>
-          </Avatar>
-          <div className="flex-1 min-w-0">
+    <Card className="w-48 shrink-0 overflow-hidden hover:shadow-lg transition-shadow">
+      {/* Coach Image - Front and Center */}
+      <div className="relative w-full h-[320px] overflow-hidden bg-gradient-to-b from-primary/10 to-primary/5">
+        <img
+          src={coach.image}
+          alt={coach.name}
+          className="w-full h-full object-cover"
+        />
+        {/* Rating Badge Overlay */}
+        <div className="absolute top-2 right-2 bg-black/70 backdrop-blur-sm rounded-full px-2 py-0.5 flex items-center gap-1">
+          <Star className="h-3 w-3 fill-yellow-400 text-yellow-400" />
+          <span className="text-xs font-medium text-white">{coach.rating}</span>
+        </div>
+        {/* Price Badge Overlay */}
+        <div className="absolute bottom-2 left-2 bg-primary text-primary-foreground rounded-full px-2 py-0.5">
+          <span className="text-xs font-semibold">${coach.hourlyRate}/hr</span>
+        </div>
+      </div>
+
+      {/* Coach Info */}
+      <CardContent className="p-3 space-y-2">
+        <div>
+          <h3 className="font-semibold text-sm truncate">{coach.name}</h3>
+          <div className="flex items-center gap-1 text-xs text-muted-foreground">
+            <MapPin className="h-3 w-3 shrink-0" />
+            <span className="truncate">{coach.location}</span>
+          </div>
+        </div>
+
+        {/* Specialties */}
+        <div className="flex flex-wrap gap-1 max-h-[32px] overflow-hidden">
+          {coach.specialties.slice(0, 2).map((specialty) => (
+            <Badge key={specialty} variant="secondary" className="text-[10px] px-1.5 py-0 truncate max-w-[90px]">
+              {specialty}
+            </Badge>
+          ))}
+          {coach.specialties.length > 2 && (
+            <Badge variant="secondary" className="text-[10px] px-1.5 py-0">
+              +{coach.specialties.length - 2}
+            </Badge>
+          )}
+        </div>
+
+        {/* Action Buttons */}
+        <div className="flex gap-1.5 pt-1">
+          <Button size="sm" className="flex-1 h-7 text-xs">
+            <Calendar className="h-3 w-3 mr-1" />
+            Book
+          </Button>
+          <Button size="sm" variant="outline" className="h-7 w-7 p-0">
+            <MessageSquare className="h-3 w-3" />
+          </Button>
+        </div>
+      </CardContent>
+    </Card>
+  )
+}
+
+interface CoachCardProps {
+  coach: Coach
+}
+
+// Standard card for recommended coaches grid
+function CoachCard({ coach }: CoachCardProps) {
+  return (
+    <Card className="overflow-hidden hover:shadow-md transition-shadow">
+      <div className="flex">
+        {/* Coach Image */}
+        <div className="w-28 sm:w-32 shrink-0">
+          <img
+            src={coach.image}
+            alt={coach.name}
+            className="w-full h-full object-cover aspect-[3/4]"
+          />
+        </div>
+
+        {/* Coach Info */}
+        <CardContent className="p-3 flex-1 flex flex-col justify-between min-w-0">
+          <div className="space-y-1.5">
             <div className="flex items-start justify-between gap-2">
-              <div>
-                <h3 className={cn('font-semibold', compact ? 'text-sm' : 'text-base')}>
-                  {coach.name}
-                </h3>
-                <div className="flex items-center gap-1 text-sm text-muted-foreground">
-                  <MapPin className="h-3 w-3" />
-                  <span>{coach.location}</span>
-                </div>
-              </div>
-              <div className="text-right shrink-0">
-                <div className="flex items-center gap-1">
-                  <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
-                  <span className="font-medium">{coach.rating}</span>
-                  <span className="text-muted-foreground text-sm">({coach.reviewCount})</span>
-                </div>
-                <p className="text-sm font-medium text-primary">${coach.hourlyRate}/hr</p>
+              <h3 className="font-semibold text-sm truncate">{coach.name}</h3>
+              <div className="flex items-center gap-0.5 shrink-0">
+                <Star className="h-3 w-3 fill-yellow-400 text-yellow-400" />
+                <span className="text-xs font-medium">{coach.rating}</span>
               </div>
             </div>
-            <div className="flex flex-wrap gap-1 mt-2">
+            <div className="flex items-center gap-1 text-xs text-muted-foreground">
+              <MapPin className="h-3 w-3 shrink-0" />
+              <span className="truncate">{coach.location}</span>
+            </div>
+            <div className="flex flex-wrap gap-1">
               {coach.specialties.map((specialty) => (
-                <Badge key={specialty} variant="secondary" className="text-xs">
+                <Badge key={specialty} variant="secondary" className="text-[10px] px-1.5 py-0">
                   {specialty}
                 </Badge>
               ))}
             </div>
-            {!compact && (
-              <p className="text-sm text-muted-foreground mt-2 line-clamp-2">{coach.bio}</p>
-            )}
-            <div className="flex gap-2 mt-3">
-              <Button size="sm" className="flex-1">
-                <Calendar className="h-4 w-4 mr-1" />
+            <p className="text-xs text-muted-foreground line-clamp-2">{coach.bio}</p>
+          </div>
+
+          <div className="flex items-center justify-between gap-2 mt-2">
+            <span className="text-sm font-semibold text-primary">${coach.hourlyRate}/hr</span>
+            <div className="flex gap-1.5">
+              <Button size="sm" className="h-7 text-xs">
+                <Calendar className="h-3 w-3 mr-1" />
                 Book
               </Button>
-              <Button size="sm" variant="outline">
-                <MessageSquare className="h-4 w-4" />
+              <Button size="sm" variant="outline" className="h-7 w-7 p-0">
+                <MessageSquare className="h-3 w-3" />
               </Button>
             </div>
           </div>
-        </div>
-      </CardContent>
+        </CardContent>
+      </div>
     </Card>
   )
 }
@@ -192,6 +261,7 @@ export default function CoachesPage() {
   const { viewMode } = useViewMode()
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedFilter, setSelectedFilter] = useState('All')
+  const carouselRef = useRef<HTMLDivElement>(null)
 
   // Filter coaches based on search and sport filter
   const filterCoaches = (coaches: Coach[]) => {
@@ -211,6 +281,17 @@ export default function CoachesPage() {
 
   const filteredYourCoaches = filterCoaches(mockYourCoaches)
   const filteredRecommendedCoaches = filterCoaches(mockRecommendedCoaches)
+
+  // Carousel scroll handlers
+  const scrollCarousel = (direction: 'left' | 'right') => {
+    if (carouselRef.current) {
+      const scrollAmount = 200 // Width of one card + gap
+      carouselRef.current.scrollBy({
+        left: direction === 'left' ? -scrollAmount : scrollAmount,
+        behavior: 'smooth',
+      })
+    }
+  }
 
   // Show message if in coach mode
   if (viewMode === 'coach') {
@@ -271,32 +352,55 @@ export default function CoachesPage() {
         ))}
       </div>
 
-      {/* Your Coaches Section */}
-      <Accordion type="single" collapsible defaultValue="your-coaches">
-        <AccordionItem value="your-coaches" className="border rounded-lg px-4">
-          <AccordionTrigger className="hover:no-underline">
-            <div className="flex items-center gap-2">
-              <span className="font-semibold">Your Coaches</span>
-              <Badge variant="secondary" className="ml-2">
-                {filteredYourCoaches.length}
-              </Badge>
+      {/* Your Coaches Section - Horizontal Carousel */}
+      <div className="space-y-3">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <h2 className="text-lg font-semibold">Your Coaches</h2>
+            <Badge variant="secondary">{filteredYourCoaches.length}</Badge>
+          </div>
+          {filteredYourCoaches.length > 2 && (
+            <div className="flex gap-1">
+              <Button
+                variant="outline"
+                size="icon"
+                className="h-8 w-8"
+                onClick={() => scrollCarousel('left')}
+              >
+                <ChevronLeft className="h-4 w-4" />
+              </Button>
+              <Button
+                variant="outline"
+                size="icon"
+                className="h-8 w-8"
+                onClick={() => scrollCarousel('right')}
+              >
+                <ChevronRight className="h-4 w-4" />
+              </Button>
             </div>
-          </AccordionTrigger>
-          <AccordionContent>
-            {filteredYourCoaches.length === 0 ? (
-              <div className="text-center py-8 text-muted-foreground">
-                <p>No coaches found matching your search.</p>
+          )}
+        </div>
+
+        {filteredYourCoaches.length === 0 ? (
+          <Card>
+            <CardContent className="text-center py-8 text-muted-foreground">
+              <p>No coaches found matching your search.</p>
+            </CardContent>
+          </Card>
+        ) : (
+          <div
+            ref={carouselRef}
+            className="flex gap-4 overflow-x-auto pb-2 scrollbar-hide snap-x snap-mandatory"
+            style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+          >
+            {filteredYourCoaches.map((coach) => (
+              <div key={coach.id} className="snap-start">
+                <CoachTradingCard coach={coach} />
               </div>
-            ) : (
-              <div className="space-y-3 pb-2">
-                {filteredYourCoaches.map((coach) => (
-                  <CoachCard key={coach.id} coach={coach} compact />
-                ))}
-              </div>
-            )}
-          </AccordionContent>
-        </AccordionItem>
-      </Accordion>
+            ))}
+          </div>
+        )}
+      </div>
 
       {/* Recommended Coaches Section */}
       <div className="space-y-4">

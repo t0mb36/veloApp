@@ -69,8 +69,8 @@ export function Sidebar({ className }: SidebarProps) {
   const currentOption = viewModeOptions.find((opt) => opt.value === viewMode)!
 
   const getUserInitials = () => {
-    if (user?.displayName) {
-      const parts = user.displayName.split(' ')
+    if (user?.display_name) {
+      const parts = user.display_name.split(' ')
       return (parts[0]?.[0] || '') + (parts[1]?.[0] || '')
     }
     if (user?.email) {
@@ -119,7 +119,7 @@ export function Sidebar({ className }: SidebarProps) {
           )}
         >
           <Avatar className="h-5 w-5">
-            <AvatarImage src={user?.photoURL || undefined} />
+            <AvatarImage src={undefined} />
             <AvatarFallback className="text-[10px] bg-primary text-primary-foreground">
               {getUserInitials()}
             </AvatarFallback>
