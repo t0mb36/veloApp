@@ -8,11 +8,16 @@
  */
 
 import { AppLayout } from '@/components/layout'
+import { ViewModeProvider } from '@/contexts/view-mode-context'
 
 interface DashboardLayoutProps {
   children: React.ReactNode
 }
 
 export default function DashboardLayout({ children }: DashboardLayoutProps) {
-  return <AppLayout>{children}</AppLayout>
+  return (
+    <ViewModeProvider>
+      <AppLayout>{children}</AppLayout>
+    </ViewModeProvider>
+  )
 }

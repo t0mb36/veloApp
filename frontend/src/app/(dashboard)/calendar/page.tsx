@@ -24,17 +24,24 @@ import {
   ChevronLeft,
   ChevronRight,
   Filter,
+  MapPin,
+  Users,
+  ChevronDown,
+  ChevronUp,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 // Placeholder events for UI development
-const mockEvents = [
+const mockEvents: CalendarEvent[] = [
   {
     id: '1',
     title: 'Morning Training Session',
     time: '09:00 AM - 10:30 AM',
     type: 'training' as const,
     date: new Date(),
+    location: 'Main Field',
+    with: 'Coach Johnson',
+    description: 'Focus on endurance and technique drills',
   },
   {
     id: '2',
@@ -42,6 +49,9 @@ const mockEvents = [
     time: '02:00 PM - 03:00 PM',
     type: 'meeting' as const,
     date: new Date(),
+    location: 'Conference Room A',
+    with: 'Team Captains',
+    description: 'Strategy discussion for upcoming tournament',
   },
   {
     id: '3',
@@ -49,6 +59,9 @@ const mockEvents = [
     time: '05:00 PM - 06:30 PM',
     type: 'training' as const,
     date: new Date(),
+    location: 'Training Facility',
+    with: 'Personal Trainer',
+    description: 'Strength and conditioning session',
   },
 ]
 
@@ -58,6 +71,9 @@ interface CalendarEvent {
   time: string
   type: 'training' | 'meeting' | 'other'
   date: Date
+  location?: string
+  with?: string
+  description?: string
 }
 
 function getEventsForDate(date: Date, events: CalendarEvent[]): CalendarEvent[] {
@@ -191,6 +207,7 @@ function FullCalendar({
 export default function CalendarPage() {
   const [selectedDate, setSelectedDate] = useState<Date>(new Date())
   const [currentMonth, setCurrentMonth] = useState<Date>(new Date())
+  const [expandedEventId, setExpandedEventId] = useState<string | null>(null)
   const eventsForSelectedDate = getEventsForDate(selectedDate, mockEvents)
 
   const goToPreviousMonth = () => setCurrentMonth(subMonths(currentMonth, 1))
@@ -208,13 +225,13 @@ export default function CalendarPage() {
         <Card className="flex-1 flex flex-col min-h-0">
           {/* Navigation Bar */}
           <CardHeader className="pb-0 shrink-0">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-4">
+            <div className="flex flex-wrap items-center justify-between gap-2 md:gap-4">
+              <div className="flex items-center gap-2 md:gap-4 flex-wrap">
                 <CardTitle className="flex items-center gap-2">
                   <CalendarDays className="h-5 w-5" />
-                  Calendar
+                  <span className="hidden sm:inline">Calendar</span>
                 </CardTitle>
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-1 md:gap-2">
                   <Button
                     variant="outline"
                     size="icon"
@@ -223,7 +240,7 @@ export default function CalendarPage() {
                   >
                     <ChevronLeft className="h-4 w-4" />
                   </Button>
-                  <h2 className="text-lg font-semibold min-w-[160px] text-center">
+                  <h2 className="text-sm md:text-lg font-semibold min-w-[120px] md:min-w-[160px] text-center">
                     {format(currentMonth, 'MMMM yyyy')}
                   </h2>
                   <Button
@@ -238,20 +255,20 @@ export default function CalendarPage() {
                     variant="outline"
                     size="sm"
                     onClick={goToToday}
-                    className="ml-2"
+                    className="ml-1 md:ml-2"
                   >
                     Today
                   </Button>
                 </div>
               </div>
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-1 md:gap-2">
                 <Button variant="outline" size="sm" className="gap-1">
                   <Filter className="h-4 w-4" />
-                  Filter
+                  <span className="hidden sm:inline">Filter</span>
                 </Button>
                 <Button size="sm" className="gap-1">
                   <Plus className="h-4 w-4" />
-                  Add Event
+                  <span className="hidden sm:inline">Add Event</span>
                 </Button>
               </div>
             </div>
@@ -274,23 +291,25 @@ export default function CalendarPage() {
       {/* Right: Day Detail Panel */}
       <div className="w-80 shrink-0">
         <Card className="h-full">
-          <CardHeader className="pb-3">
+          <CardHeader className="pb-0">
             <div className="space-y-1">
-              <CardTitle className="text-lg">
+              <CardTitle className="text-base">
                 {format(selectedDate, 'EEEE')}
               </CardTitle>
-              <p className="text-2xl font-bold">
-                {format(selectedDate, 'MMMM d, yyyy')}
-              </p>
-              {isToday(selectedDate) && (
-                <span className="inline-flex items-center rounded-full bg-primary/10 px-2.5 py-0.5 text-xs font-medium text-primary">
-                  Today
-                </span>
-              )}
+              <div className="flex items-center gap-2">
+                <p className="text-xl font-bold">
+                  {format(selectedDate, 'MMMM d, yyyy')}
+                </p>
+                {isToday(selectedDate) && (
+                  <span className="inline-flex items-center rounded-full bg-primary/10 px-2 py-0.5 text-xs font-medium text-primary">
+                    Today
+                  </span>
+                )}
+              </div>
             </div>
           </CardHeader>
           <Separator />
-          <CardContent className="pt-4">
+          <CardContent className="pt-0 px-3">
             {eventsForSelectedDate.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-8 text-center">
                 <CalendarDays className="h-12 w-12 text-muted-foreground/50" />
@@ -312,23 +331,63 @@ export default function CalendarPage() {
                   {eventsForSelectedDate.length !== 1 ? 's' : ''} scheduled
                 </p>
                 <div className="space-y-2">
-                  {eventsForSelectedDate.map((event) => (
-                    <div
-                      key={event.id}
-                      className="flex items-start gap-3 rounded-lg border p-3 transition-colors hover:bg-accent/50 cursor-pointer"
-                    >
-                      <EventTypeIndicator type={event.type} />
-                      <div className="flex-1 space-y-1">
-                        <p className="text-sm font-medium leading-none">
-                          {event.title}
-                        </p>
-                        <div className="flex items-center text-xs text-muted-foreground">
-                          <Clock className="mr-1 h-3 w-3" />
-                          {event.time}
+                  {eventsForSelectedDate.map((event) => {
+                    const isExpanded = expandedEventId === event.id
+
+                    return (
+                      <div
+                        key={event.id}
+                        className="rounded-lg border transition-colors hover:bg-accent/50"
+                      >
+                        <div
+                          className="flex items-start gap-3 p-2 cursor-pointer"
+                          onClick={() =>
+                            setExpandedEventId(isExpanded ? null : event.id)
+                          }
+                        >
+                          <EventTypeIndicator type={event.type} />
+                          <div className="flex-1 space-y-1">
+                            <div className="flex items-center justify-between">
+                              <p className="text-sm font-medium leading-none">
+                                {event.title}
+                              </p>
+                              {isExpanded ? (
+                                <ChevronUp className="h-4 w-4 text-muted-foreground" />
+                              ) : (
+                                <ChevronDown className="h-4 w-4 text-muted-foreground" />
+                              )}
+                            </div>
+                            <div className="flex items-center text-xs text-muted-foreground">
+                              <Clock className="mr-1 h-3 w-3" />
+                              {event.time}
+                            </div>
+                          </div>
                         </div>
+
+                        {isExpanded && (
+                          <div className="px-2 pb-2 pt-1 space-y-2 border-t">
+                            {event.location && (
+                              <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                                <MapPin className="h-3 w-3 flex-shrink-0" />
+                                <span>{event.location}</span>
+                              </div>
+                            )}
+                            {event.with && (
+                              <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                                <Users className="h-3 w-3 flex-shrink-0" />
+                                <span>With: {event.with}</span>
+                              </div>
+                            )}
+                            {event.description && (
+                              <div className="text-xs text-muted-foreground pt-1">
+                                <p>{event.description}</p>
+                              </div>
+                            )}
+                          </div>
+                        )}
                       </div>
-                    </div>
-                  ))}
+                    )
+                  })}
                 </div>
               </div>
             )}

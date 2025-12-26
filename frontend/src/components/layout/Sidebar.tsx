@@ -1,11 +1,14 @@
 'use client'
 
+import { useState } from 'react'
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import { cn } from '@/lib/utils'
 import { Separator } from '@/components/ui/separator'
-import { Home, Map, BookOpen, Calendar, Users, User, Settings, LogOut } from 'lucide-react'
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
+import { Home, Map, BookOpen, Calendar, Users, Settings, LogOut, GraduationCap, ChevronUp, Check } from 'lucide-react'
 import { useAuthContext } from '@/contexts/auth-context'
+import { useViewMode, ViewMode } from '@/contexts/view-mode-context'
 
 interface NavItem {
   title: string
@@ -41,30 +44,44 @@ const mainNavItems: NavItem[] = [
   },
 ]
 
-const bottomNavItems: NavItem[] = [
-  {
-    title: 'Profile',
-    icon: <User className="h-5 w-5" />,
-    href: '/profile',
-  },
-  {
-    title: 'Settings',
-    icon: <Settings className="h-5 w-5" />,
-    href: '/settings',
-  },
-]
 
 interface SidebarProps {
   className?: string
 }
 
+const viewModeOptions: { value: ViewMode; label: string; icon: React.ReactNode }[] = [
+  { value: 'student', label: 'Student', icon: <GraduationCap className="h-4 w-4" /> },
+  { value: 'coach', label: 'Coach', icon: <Users className="h-4 w-4" /> },
+]
+
 export function Sidebar({ className }: SidebarProps) {
   const router = useRouter()
-  const { logout } = useAuthContext()
+  const pathname = usePathname()
+  const { logout, user } = useAuthContext()
+  const { viewMode, setViewMode } = useViewMode()
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false)
 
   const handleLogout = async () => {
     await logout()
     router.push('/login')
+  }
+
+  const currentOption = viewModeOptions.find((opt) => opt.value === viewMode)!
+
+  const getUserInitials = () => {
+    if (user?.displayName) {
+      const parts = user.displayName.split(' ')
+      return (parts[0]?.[0] || '') + (parts[1]?.[0] || '')
+    }
+    if (user?.email) {
+      return user.email[0].toUpperCase()
+    }
+    return 'U'
+  }
+
+  const handleSelectMode = (mode: ViewMode) => {
+    setViewMode(mode)
+    setIsDropdownOpen(false)
   }
 
   return (
@@ -92,9 +109,35 @@ export function Sidebar({ className }: SidebarProps) {
 
       {/* Bottom Navigation */}
       <nav className="space-y-1 p-3">
-        {bottomNavItems.map((item) => (
-          <NavItemComponent key={item.href} item={item} />
-        ))}
+        {/* Profile with Avatar */}
+        <Link
+          href="/profile"
+          className={cn(
+            'flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors',
+            'hover:bg-accent hover:text-accent-foreground',
+            pathname === '/profile' ? 'bg-accent text-accent-foreground' : 'text-muted-foreground'
+          )}
+        >
+          <Avatar className="h-5 w-5">
+            <AvatarImage src={user?.photoURL || undefined} />
+            <AvatarFallback className="text-[10px] bg-primary text-primary-foreground">
+              {getUserInitials()}
+            </AvatarFallback>
+          </Avatar>
+          <span>Profile</span>
+        </Link>
+        {/* Settings */}
+        <Link
+          href="/settings"
+          className={cn(
+            'flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors',
+            'hover:bg-accent hover:text-accent-foreground',
+            pathname === '/settings' ? 'bg-accent text-accent-foreground' : 'text-muted-foreground'
+          )}
+        >
+          <Settings className="h-5 w-5" />
+          <span>Settings</span>
+        </Link>
         <button
           onClick={handleLogout}
           className={cn(
@@ -107,6 +150,55 @@ export function Sidebar({ className }: SidebarProps) {
           <span>Logout</span>
         </button>
       </nav>
+
+      <Separator />
+
+      {/* View Mode Dropdown */}
+      <div className="relative p-3">
+        <button
+          onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+          className={cn(
+            'flex w-full items-center justify-between rounded-lg px-3 py-2.5 text-sm font-medium transition-colors cursor-pointer',
+            'border border-border bg-background hover:bg-accent'
+          )}
+        >
+          <div className="flex items-center gap-2">
+            {currentOption.icon}
+            <span>{currentOption.label}</span>
+          </div>
+          <ChevronUp
+            className={cn(
+              'h-4 w-4 text-muted-foreground transition-transform',
+              isDropdownOpen && 'rotate-180'
+            )}
+          />
+        </button>
+
+        {/* Dropdown Menu */}
+        {isDropdownOpen && (
+          <div className="absolute bottom-full left-3 right-3 mb-1 rounded-lg border border-border bg-background shadow-lg">
+            {viewModeOptions.map((option) => (
+              <button
+                key={option.value}
+                onClick={() => handleSelectMode(option.value)}
+                className={cn(
+                  'flex w-full items-center justify-between px-3 py-2.5 text-sm font-medium transition-colors cursor-pointer first:rounded-t-lg last:rounded-b-lg',
+                  'hover:bg-accent',
+                  viewMode === option.value && 'bg-accent/50'
+                )}
+              >
+                <div className="flex items-center gap-2">
+                  {option.icon}
+                  <span>{option.label}</span>
+                </div>
+                {viewMode === option.value && (
+                  <Check className="h-4 w-4 text-primary" />
+                )}
+              </button>
+            ))}
+          </div>
+        )}
+      </div>
     </aside>
   )
 }
