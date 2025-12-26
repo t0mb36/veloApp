@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Separator } from '@/components/ui/separator'
 import { Button } from '@/components/ui/button'
@@ -31,39 +31,41 @@ import {
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
-// Placeholder events for UI development
-const mockEvents: CalendarEvent[] = [
-  {
-    id: '1',
-    title: 'Morning Training Session',
-    time: '09:00 AM - 10:30 AM',
-    type: 'training' as const,
-    date: new Date(),
-    location: 'Main Field',
-    with: 'Coach Johnson',
-    description: 'Focus on endurance and technique drills',
-  },
-  {
-    id: '2',
-    title: 'Team Meeting',
-    time: '02:00 PM - 03:00 PM',
-    type: 'meeting' as const,
-    date: new Date(),
-    location: 'Conference Room A',
-    with: 'Team Captains',
-    description: 'Strategy discussion for upcoming tournament',
-  },
-  {
-    id: '3',
-    title: 'Evening Practice',
-    time: '05:00 PM - 06:30 PM',
-    type: 'training' as const,
-    date: new Date(),
-    location: 'Training Facility',
-    with: 'Personal Trainer',
-    description: 'Strength and conditioning session',
-  },
-]
+// Function to create mock events with current date (called at runtime)
+function createMockEvents(today: Date): CalendarEvent[] {
+  return [
+    {
+      id: '1',
+      title: 'Morning Training Session',
+      time: '09:00 AM - 10:30 AM',
+      type: 'training' as const,
+      date: today,
+      location: 'Main Field',
+      with: 'Coach Johnson',
+      description: 'Focus on endurance and technique drills',
+    },
+    {
+      id: '2',
+      title: 'Team Meeting',
+      time: '02:00 PM - 03:00 PM',
+      type: 'meeting' as const,
+      date: today,
+      location: 'Conference Room A',
+      with: 'Team Captains',
+      description: 'Strategy discussion for upcoming tournament',
+    },
+    {
+      id: '3',
+      title: 'Evening Practice',
+      time: '05:00 PM - 06:30 PM',
+      type: 'training' as const,
+      date: today,
+      location: 'Training Facility',
+      with: 'Personal Trainer',
+      description: 'Strength and conditioning session',
+    },
+  ]
+}
 
 interface CalendarEvent {
   id: string
@@ -205,17 +207,45 @@ function FullCalendar({
 }
 
 export default function CalendarPage() {
-  const [selectedDate, setSelectedDate] = useState<Date>(new Date())
-  const [currentMonth, setCurrentMonth] = useState<Date>(new Date())
+  const [selectedDate, setSelectedDate] = useState<Date | null>(null)
+  const [currentMonth, setCurrentMonth] = useState<Date | null>(null)
   const [expandedEventId, setExpandedEventId] = useState<string | null>(null)
-  const eventsForSelectedDate = getEventsForDate(selectedDate, mockEvents)
+  const [isHydrated, setIsHydrated] = useState(false)
 
-  const goToPreviousMonth = () => setCurrentMonth(subMonths(currentMonth, 1))
-  const goToNextMonth = () => setCurrentMonth(addMonths(currentMonth, 1))
+  // Set dates only on client side after hydration to ensure correct current date
+  useEffect(() => {
+    const now = new Date()
+    setSelectedDate(now)
+    setCurrentMonth(now)
+    setIsHydrated(true)
+  }, [])
+
+  // Create mock events at runtime with today's date
+  const mockEvents = useMemo(() => {
+    if (!isHydrated) return []
+    return createMockEvents(new Date())
+  }, [isHydrated])
+  const eventsForSelectedDate = selectedDate ? getEventsForDate(selectedDate, mockEvents) : []
+
+  const goToPreviousMonth = () => {
+    if (currentMonth) setCurrentMonth(subMonths(currentMonth, 1))
+  }
+  const goToNextMonth = () => {
+    if (currentMonth) setCurrentMonth(addMonths(currentMonth, 1))
+  }
   const goToToday = () => {
     const today = new Date()
     setCurrentMonth(today)
     setSelectedDate(today)
+  }
+
+  // Show loading state until client-side hydration is complete
+  if (!isHydrated || !selectedDate || !currentMonth) {
+    return (
+      <div className="flex h-full items-center justify-center">
+        <div className="text-muted-foreground">Loading calendar...</div>
+      </div>
+    )
   }
 
   return (

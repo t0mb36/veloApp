@@ -6,7 +6,7 @@ import { usePathname, useRouter } from 'next/navigation'
 import { cn } from '@/lib/utils'
 import { Separator } from '@/components/ui/separator'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
-import { Home, Map, BookOpen, Calendar, Users, Settings, LogOut, GraduationCap, ChevronUp, Check } from 'lucide-react'
+import { Home, Compass, BookOpen, Calendar, Settings, LogOut, GraduationCap, ChevronUp, Check, Users } from 'lucide-react'
 import { useAuthContext } from '@/contexts/auth-context'
 import { useViewMode, ViewMode } from '@/contexts/view-mode-context'
 
@@ -23,9 +23,9 @@ const mainNavItems: NavItem[] = [
     href: '/',
   },
   {
-    title: 'Maps',
-    icon: <Map className="h-5 w-5" />,
-    href: '/maps',
+    title: 'Discover',
+    icon: <Compass className="h-5 w-5" />,
+    href: '/discover',
   },
   {
     title: 'Programs',
@@ -36,11 +36,6 @@ const mainNavItems: NavItem[] = [
     title: 'Calendar',
     icon: <Calendar className="h-5 w-5" />,
     href: '/calendar',
-  },
-  {
-    title: 'Coaches',
-    icon: <Users className="h-5 w-5" />,
-    href: '/coaches',
   },
 ]
 
