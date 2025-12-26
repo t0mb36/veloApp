@@ -22,7 +22,6 @@ import {
   DollarSign,
   LayoutGrid,
   Map,
-  Compass,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
@@ -412,22 +411,378 @@ export default function DiscoverPage() {
     (priceRange[0] > 0 || priceRange[1] < 200 ? 1 : 0) +
     (minRating > 0 ? 1 : 0)
 
-  return (
-    <div className="flex flex-col h-full">
-      {/* Search Header */}
-      <div className="shrink-0 pb-4">
-        {/* Title */}
-        <div className="text-center mb-4">
-          <h1 className="text-2xl font-bold flex items-center justify-center gap-2">
-            <Compass className="h-6 w-6" />
-            Discover Coaches
-          </h1>
-          <p className="text-sm text-muted-foreground mt-1">
-            Find your perfect coach by name, sport, or location
-          </p>
+  // Search bar component for grid view
+  const SearchHeader = () => (
+    <div className="shrink-0 pb-4">
+      {/* Search Bar with View Toggle and Filter */}
+      <div className="flex gap-3">
+        {/* Search Input */}
+        <div className="relative flex-1">
+          <Search className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-muted-foreground" />
+          <input
+            type="text"
+            placeholder="Try: 'Tennis coach in San Francisco' or 'Yoga for beginners'"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className={cn(
+              'w-full h-12 pl-12 pr-32 rounded-xl border border-input bg-background',
+              'text-base placeholder:text-muted-foreground/70',
+              'focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2',
+              'transition-all'
+            )}
+          />
+          <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-1.5">
+            {searchQuery && (
+              <button
+                onClick={() => setSearchQuery('')}
+                className="p-1 text-muted-foreground hover:text-foreground rounded-full hover:bg-muted"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            )}
+            <div className="flex items-center gap-1 text-xs text-muted-foreground bg-muted/50 px-2 py-1 rounded-md">
+              <Sparkles className="h-3 w-3" />
+              <span className="hidden sm:inline">Smart Search</span>
+            </div>
+          </div>
         </div>
 
-        {/* Search Bar with View Toggle and Filter */}
+        {/* View Toggle */}
+        <div className="flex items-center rounded-xl border p-1 bg-background">
+          <Button
+            variant={viewType === 'grid' ? 'secondary' : 'ghost'}
+            size="sm"
+            className="h-10 px-3 rounded-lg"
+            onClick={() => setViewType('grid')}
+          >
+            <LayoutGrid className="h-4 w-4" />
+          </Button>
+          <Button
+            variant={viewType === 'map' ? 'secondary' : 'ghost'}
+            size="sm"
+            className="h-10 px-3 rounded-lg"
+            onClick={() => setViewType('map')}
+          >
+            <Map className="h-4 w-4" />
+          </Button>
+        </div>
+
+        {/* Filter Toggle Button */}
+        <Button
+          variant={isFilterOpen ? 'default' : 'outline'}
+          className={cn(
+            'h-12 px-5 gap-2 rounded-xl shrink-0',
+            activeFilterCount > 0 && !isFilterOpen && 'border-primary'
+          )}
+          onClick={() => setIsFilterOpen(!isFilterOpen)}
+        >
+          <Filter className="h-4 w-4" />
+          <span>Filters</span>
+          {activeFilterCount > 0 && (
+            <Badge
+              variant={isFilterOpen ? 'outline' : 'secondary'}
+              className="ml-1 h-5 px-1.5 text-xs"
+            >
+              {activeFilterCount}
+            </Badge>
+          )}
+          <ChevronDown
+            className={cn(
+              'h-4 w-4 transition-transform',
+              isFilterOpen && 'rotate-180'
+            )}
+          />
+        </Button>
+      </div>
+
+      {/* Expanded Filter Panel */}
+      {isFilterOpen && (
+        <Card className="mt-4">
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="font-semibold">Filter Coaches</h3>
+              {activeFilterCount > 0 && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={clearFilters}
+                  className="text-muted-foreground h-8"
+                >
+                  Clear all filters
+                </Button>
+              )}
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+              {/* Sports Filter */}
+              <div className="space-y-3">
+                <label className="text-sm font-medium flex items-center gap-2">
+                  <Users className="h-4 w-4 text-muted-foreground" />
+                  Sports
+                </label>
+                <div className="flex flex-wrap gap-2">
+                  {sportFilters.map((sport) => (
+                    <Badge
+                      key={sport}
+                      variant={selectedSports.includes(sport) ? 'default' : 'outline'}
+                      className="cursor-pointer hover:bg-accent transition-colors"
+                      onClick={() => toggleSport(sport)}
+                    >
+                      {sport}
+                      {selectedSports.includes(sport) && (
+                        <Check className="h-3 w-3 ml-1" />
+                      )}
+                    </Badge>
+                  ))}
+                </div>
+              </div>
+
+              {/* Location Filter */}
+              <div className="space-y-3">
+                <label className="text-sm font-medium flex items-center gap-2">
+                  <MapPin className="h-4 w-4 text-muted-foreground" />
+                  Location
+                </label>
+                <div className="relative">
+                  <input
+                    type="text"
+                    placeholder="City or area..."
+                    value={locationFilter}
+                    onChange={(e) => setLocationFilter(e.target.value)}
+                    className={cn(
+                      'w-full h-9 px-3 rounded-md border border-input bg-background',
+                      'text-sm placeholder:text-muted-foreground',
+                      'focus:outline-none focus:ring-2 focus:ring-ring'
+                    )}
+                  />
+                  {locationFilter && (
+                    <button
+                      onClick={() => setLocationFilter('')}
+                      className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                    >
+                      <X className="h-3.5 w-3.5" />
+                    </button>
+                  )}
+                </div>
+              </div>
+
+              {/* Price Range Filter */}
+              <div className="space-y-3">
+                <label className="text-sm font-medium flex items-center gap-2">
+                  <DollarSign className="h-4 w-4 text-muted-foreground" />
+                  Price Range
+                </label>
+                <div className="flex items-center gap-2">
+                  <div className="relative flex-1">
+                    <span className="absolute left-2 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">$</span>
+                    <input
+                      type="number"
+                      placeholder="Min"
+                      value={priceRange[0] || ''}
+                      onChange={(e) => setPriceRange([Number(e.target.value) || 0, priceRange[1]])}
+                      className={cn(
+                        'w-full h-9 pl-6 pr-2 rounded-md border border-input bg-background',
+                        'text-sm placeholder:text-muted-foreground',
+                        'focus:outline-none focus:ring-2 focus:ring-ring'
+                      )}
+                    />
+                  </div>
+                  <span className="text-muted-foreground">-</span>
+                  <div className="relative flex-1">
+                    <span className="absolute left-2 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">$</span>
+                    <input
+                      type="number"
+                      placeholder="Max"
+                      value={priceRange[1] === 200 ? '' : priceRange[1]}
+                      onChange={(e) => setPriceRange([priceRange[0], Number(e.target.value) || 200])}
+                      className={cn(
+                        'w-full h-9 pl-6 pr-2 rounded-md border border-input bg-background',
+                        'text-sm placeholder:text-muted-foreground',
+                        'focus:outline-none focus:ring-2 focus:ring-ring'
+                      )}
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Rating Filter */}
+              <div className="space-y-3">
+                <label className="text-sm font-medium flex items-center gap-2">
+                  <Star className="h-4 w-4 text-muted-foreground" />
+                  Minimum Rating
+                </label>
+                <div className="flex gap-1">
+                  {[0, 3, 3.5, 4, 4.5].map((rating) => (
+                    <button
+                      key={rating}
+                      onClick={() => setMinRating(rating)}
+                      className={cn(
+                        'flex-1 h-9 rounded-md border text-sm font-medium transition-colors',
+                        minRating === rating
+                          ? 'bg-primary text-primary-foreground border-primary'
+                          : 'border-input bg-background hover:bg-accent'
+                      )}
+                    >
+                      {rating === 0 ? 'Any' : `${rating}+`}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            {/* Active Filters Summary */}
+            {activeFilterCount > 0 && (
+              <div className="flex items-center gap-2 flex-wrap mt-4 pt-4 border-t">
+                <span className="text-sm text-muted-foreground">Active:</span>
+                {selectedSports.map((sport) => (
+                  <Badge
+                    key={sport}
+                    variant="secondary"
+                    className="gap-1 pr-1 cursor-pointer hover:bg-secondary/80"
+                    onClick={() => toggleSport(sport)}
+                  >
+                    {sport}
+                    <X className="h-3 w-3" />
+                  </Badge>
+                ))}
+                {locationFilter && (
+                  <Badge
+                    variant="secondary"
+                    className="gap-1 pr-1 cursor-pointer hover:bg-secondary/80"
+                    onClick={() => setLocationFilter('')}
+                  >
+                    {locationFilter}
+                    <X className="h-3 w-3" />
+                  </Badge>
+                )}
+                {(priceRange[0] > 0 || priceRange[1] < 200) && (
+                  <Badge
+                    variant="secondary"
+                    className="gap-1 pr-1 cursor-pointer hover:bg-secondary/80"
+                    onClick={() => setPriceRange([0, 200])}
+                  >
+                    ${priceRange[0]} - ${priceRange[1] === 200 ? '200+' : priceRange[1]}
+                    <X className="h-3 w-3" />
+                  </Badge>
+                )}
+                {minRating > 0 && (
+                  <Badge
+                    variant="secondary"
+                    className="gap-1 pr-1 cursor-pointer hover:bg-secondary/80"
+                    onClick={() => setMinRating(0)}
+                  >
+                    {minRating}+ rating
+                    <X className="h-3 w-3" />
+                  </Badge>
+                )}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      )}
+    </div>
+  )
+
+  // Grid View
+  if (viewType === 'grid') {
+    return (
+      <div className="flex flex-col h-full">
+        <SearchHeader />
+
+        {/* Grid Content */}
+        <div className="flex-1 overflow-y-auto min-h-0 space-y-6">
+          {/* Your Coaches Section - Horizontal Carousel */}
+          {filteredYourCoaches.length > 0 && (
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <h2 className="text-lg font-semibold">Your Coaches</h2>
+                  <Badge variant="secondary">{filteredYourCoaches.length}</Badge>
+                </div>
+                {filteredYourCoaches.length > 2 && (
+                  <div className="flex gap-1">
+                    <Button
+                      variant="outline"
+                      size="icon"
+                      className="h-8 w-8"
+                      onClick={() => scrollCarousel('left')}
+                    >
+                      <ChevronLeft className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="icon"
+                      className="h-8 w-8"
+                      onClick={() => scrollCarousel('right')}
+                    >
+                      <ChevronRight className="h-4 w-4" />
+                    </Button>
+                  </div>
+                )}
+              </div>
+
+              <div
+                ref={carouselRef}
+                className="flex gap-4 overflow-x-auto pb-2 snap-x snap-mandatory"
+                style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+              >
+                {filteredYourCoaches.map((coach) => (
+                  <div key={coach.id} className="snap-start">
+                    <CoachTradingCard coach={coach} />
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Recommended Coaches Section - Grid */}
+          <div className="space-y-4 pb-4">
+            <div className="flex items-center justify-between">
+              <h2 className="text-lg font-semibold">
+                {filteredYourCoaches.length > 0 ? 'Recommended for You' : 'All Coaches'}
+              </h2>
+              <span className="text-sm text-muted-foreground">
+                {filteredRecommendedCoaches.length} coaches
+              </span>
+            </div>
+
+            {filteredRecommendedCoaches.length === 0 && filteredYourCoaches.length === 0 ? (
+              <Card>
+                <CardContent className="text-center py-12 text-muted-foreground">
+                  <Search className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                  <p className="text-lg font-medium mb-1">No coaches found</p>
+                  <p className="text-sm mb-4">Try adjusting your search or filters</p>
+                  <Button variant="outline" onClick={clearFilters}>
+                    Clear all filters
+                  </Button>
+                </CardContent>
+              </Card>
+            ) : (
+              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                {filteredRecommendedCoaches.map((coach) => (
+                  <CoachCard key={coach.id} coach={coach} />
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  // Map View - Full screen map filling the content area
+  // Use negative margins to cancel parent padding (p-6 = 1.5rem on md+)
+  return (
+    <div className="relative w-[calc(100%+3rem)] h-[calc(100%+3rem)] -m-6">
+      {/* Full-screen Map */}
+      <MapboxMap
+        className="absolute inset-0 h-full w-full"
+        markers={mapMarkers}
+        onMarkerClick={handleMarkerClick}
+      />
+
+      {/* Search Header Overlay */}
+      <div className="absolute top-6 left-6 right-6 z-10">
         <div className="flex gap-3">
           {/* Search Input */}
           <div className="relative flex-1">
@@ -441,7 +796,7 @@ export default function DiscoverPage() {
                 'w-full h-12 pl-12 pr-32 rounded-xl border border-input bg-background',
                 'text-base placeholder:text-muted-foreground/70',
                 'focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2',
-                'transition-all'
+                'transition-all shadow-lg'
               )}
             />
             <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-1.5">
@@ -461,9 +816,9 @@ export default function DiscoverPage() {
           </div>
 
           {/* View Toggle */}
-          <div className="flex items-center rounded-xl border p-1 bg-background">
+          <div className="flex items-center rounded-xl border p-1 bg-background shadow-lg">
             <Button
-              variant={viewType === 'grid' ? 'secondary' : 'ghost'}
+              variant="ghost"
               size="sm"
               className="h-10 px-3 rounded-lg"
               onClick={() => setViewType('grid')}
@@ -471,7 +826,7 @@ export default function DiscoverPage() {
               <LayoutGrid className="h-4 w-4" />
             </Button>
             <Button
-              variant={viewType === 'map' ? 'secondary' : 'ghost'}
+              variant="secondary"
               size="sm"
               className="h-10 px-3 rounded-lg"
               onClick={() => setViewType('map')}
@@ -484,7 +839,7 @@ export default function DiscoverPage() {
           <Button
             variant={isFilterOpen ? 'default' : 'outline'}
             className={cn(
-              'h-12 px-5 gap-2 rounded-xl shrink-0',
+              'h-12 px-5 gap-2 rounded-xl shrink-0 shadow-lg bg-background',
               activeFilterCount > 0 && !isFilterOpen && 'border-primary'
             )}
             onClick={() => setIsFilterOpen(!isFilterOpen)}
@@ -510,7 +865,7 @@ export default function DiscoverPage() {
 
         {/* Expanded Filter Panel */}
         {isFilterOpen && (
-          <Card className="mt-4">
+          <Card className="mt-4 shadow-lg">
             <CardContent className="p-4">
               <div className="flex items-center justify-between mb-4">
                 <h3 className="font-semibold">Filter Coaches</h3>
@@ -695,115 +1050,12 @@ export default function DiscoverPage() {
         )}
       </div>
 
-      {/* Main Content - Conditional Rendering based on viewType */}
-      {viewType === 'grid' ? (
-        /* Grid View */
-        <div className="flex-1 overflow-y-auto min-h-0 space-y-6">
-          {/* Your Coaches Section - Horizontal Carousel */}
-          {filteredYourCoaches.length > 0 && (
-            <div className="space-y-3">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <h2 className="text-lg font-semibold">Your Coaches</h2>
-                  <Badge variant="secondary">{filteredYourCoaches.length}</Badge>
-                </div>
-                {filteredYourCoaches.length > 2 && (
-                  <div className="flex gap-1">
-                    <Button
-                      variant="outline"
-                      size="icon"
-                      className="h-8 w-8"
-                      onClick={() => scrollCarousel('left')}
-                    >
-                      <ChevronLeft className="h-4 w-4" />
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="icon"
-                      className="h-8 w-8"
-                      onClick={() => scrollCarousel('right')}
-                    >
-                      <ChevronRight className="h-4 w-4" />
-                    </Button>
-                  </div>
-                )}
-              </div>
-
-              <div
-                ref={carouselRef}
-                className="flex gap-4 overflow-x-auto pb-2 snap-x snap-mandatory"
-                style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
-              >
-                {filteredYourCoaches.map((coach) => (
-                  <div key={coach.id} className="snap-start">
-                    <CoachTradingCard coach={coach} />
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* Recommended Coaches Section - Grid */}
-          <div className="space-y-4 pb-4">
-            <div className="flex items-center justify-between">
-              <h2 className="text-lg font-semibold">
-                {filteredYourCoaches.length > 0 ? 'Recommended for You' : 'All Coaches'}
-              </h2>
-              <span className="text-sm text-muted-foreground">
-                {filteredRecommendedCoaches.length} coaches
-              </span>
-            </div>
-
-            {filteredRecommendedCoaches.length === 0 && filteredYourCoaches.length === 0 ? (
-              <Card>
-                <CardContent className="text-center py-12 text-muted-foreground">
-                  <Search className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                  <p className="text-lg font-medium mb-1">No coaches found</p>
-                  <p className="text-sm mb-4">Try adjusting your search or filters</p>
-                  <Button variant="outline" onClick={clearFilters}>
-                    Clear all filters
-                  </Button>
-                </CardContent>
-              </Card>
-            ) : (
-              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-                {filteredRecommendedCoaches.map((coach) => (
-                  <CoachCard key={coach.id} coach={coach} />
-                ))}
-              </div>
-            )}
-          </div>
-        </div>
-      ) : (
-        /* Map View */
-        <div className="flex-1 min-h-0">
-          <Card className="h-full flex flex-col overflow-hidden">
-            <CardHeader className="pb-2 shrink-0">
-              <div className="flex items-center justify-between">
-                <span className="text-sm font-medium">
-                  {allFilteredCoaches.length} coach{allFilteredCoaches.length !== 1 ? 'es' : ''} found
-                </span>
-                <div className="flex items-center gap-1">
-                  <div className="h-3 w-3 rounded-full bg-blue-500" />
-                  <span className="text-sm text-muted-foreground">Coaches</span>
-                </div>
-              </div>
-            </CardHeader>
-            <CardContent className="flex-1 p-2 min-h-0 relative">
-              <MapboxMap
-                className="h-full w-full"
-                markers={mapMarkers}
-                onMarkerClick={handleMarkerClick}
-              />
-              {selectedCoach && (
-                <SelectedCoachPanel
-                  coach={selectedCoach}
-                  onClose={() => setSelectedCoach(null)}
-                />
-              )}
-            </CardContent>
-          </Card>
-        </div>
+      {/* Selected Coach Panel */}
+      {selectedCoach && (
+        <SelectedCoachPanel
+          coach={selectedCoach}
+          onClose={() => setSelectedCoach(null)}
+        />
       )}
     </div>
   )
