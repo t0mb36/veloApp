@@ -26,6 +26,7 @@ interface MapboxMapProps {
   initialCenter?: [number, number]
   initialZoom?: number
   useIpLocation?: boolean
+  controlsPosition?: 'top-right' | 'top-left' | 'bottom-right' | 'bottom-left'
 }
 
 // Default fallback location (San Francisco)
@@ -38,6 +39,7 @@ export function MapboxMap({
   initialCenter,
   initialZoom = 12,
   useIpLocation = true,
+  controlsPosition = 'bottom-right',
 }: MapboxMapProps) {
   const mapContainer = useRef<HTMLDivElement>(null)
   const map = useRef<mapboxgl.Map | null>(null)
@@ -110,8 +112,12 @@ export function MapboxMap({
         zoom: initialZoom,
       })
 
-      // Add navigation controls
-      map.current.addControl(new mapboxgl.NavigationControl(), 'top-right')
+      // Add navigation controls (zoom +/-)
+      map.current.addControl(new mapboxgl.NavigationControl({
+        showCompass: true,
+        showZoom: true,
+        visualizePitch: true,
+      }), controlsPosition)
 
       // Add geolocation control
       const geolocateControl = new mapboxgl.GeolocateControl({
@@ -122,7 +128,7 @@ export function MapboxMap({
         showUserHeading: true,
       })
       geolocateControlRef.current = geolocateControl
-      map.current.addControl(geolocateControl, 'top-right')
+      map.current.addControl(geolocateControl, controlsPosition)
 
       map.current.on('load', () => {
         setIsLoaded(true)
@@ -141,7 +147,7 @@ export function MapboxMap({
       map.current = null
       geolocateControlRef.current = null
     }
-  }, [mapCenter, initialZoom, hasGeolocationPermission])
+  }, [mapCenter, initialZoom, hasGeolocationPermission, controlsPosition])
 
   // Trigger geolocate when permission is granted after map is loaded
   useEffect(() => {
@@ -257,9 +263,95 @@ export function MapboxMap({
 
   return (
     <div className={cn('relative min-h-[400px]', className)} style={{ height: '100%' }}>
-      <div ref={mapContainer} className="absolute inset-0 rounded-lg" style={{ width: '100%', height: '100%' }} />
+      {/* Custom styles for Mapbox controls to match our UI */}
+      <style>{`
+        .mapboxgl-ctrl-group {
+          background: white !important;
+          border: 1px solid hsl(var(--border)) !important;
+          border-radius: 0.75rem !important;
+          box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1) !important;
+          overflow: hidden;
+        }
+        .dark .mapboxgl-ctrl-group {
+          background: hsl(var(--background)) !important;
+        }
+        .mapboxgl-ctrl-group button {
+          width: 40px !important;
+          height: 40px !important;
+          background: white !important;
+          border: none !important;
+          border-bottom: 1px solid hsl(var(--border)) !important;
+        }
+        .dark .mapboxgl-ctrl-group button {
+          background: hsl(var(--background)) !important;
+        }
+        .mapboxgl-ctrl-group button:last-child {
+          border-bottom: none !important;
+        }
+        .mapboxgl-ctrl-group button:hover {
+          background: hsl(var(--accent)) !important;
+        }
+        .mapboxgl-ctrl-group button .mapboxgl-ctrl-icon {
+          filter: brightness(0) saturate(100%);
+        }
+        .dark .mapboxgl-ctrl-group button .mapboxgl-ctrl-icon {
+          filter: brightness(0) saturate(100%) invert(1);
+        }
+        .mapboxgl-ctrl-geolocate {
+          width: 40px !important;
+          height: 40px !important;
+        }
+        .mapboxgl-ctrl-bottom-right {
+          right: 1.5rem !important;
+          bottom: 1.5rem !important;
+        }
+        .mapboxgl-ctrl-bottom-left {
+          left: 1.5rem !important;
+          bottom: 1.5rem !important;
+        }
+        .mapboxgl-ctrl-top-right {
+          right: 1.5rem !important;
+          top: 1.5rem !important;
+        }
+        .mapboxgl-ctrl-top-left {
+          left: 1.5rem !important;
+          top: 1.5rem !important;
+        }
+        .mapboxgl-ctrl-group + .mapboxgl-ctrl-group {
+          margin-top: 0.5rem;
+        }
+        /* Attribution styling - position at absolute bottom */
+        .mapboxgl-ctrl-attrib {
+          background: rgba(255, 255, 255, 0.8) !important;
+          backdrop-filter: blur(4px);
+          padding: 2px 8px !important;
+          font-size: 10px !important;
+          border-radius: 4px 0 0 0 !important;
+        }
+        .dark .mapboxgl-ctrl-attrib {
+          background: rgba(0, 0, 0, 0.6) !important;
+          color: rgba(255, 255, 255, 0.7) !important;
+        }
+        .dark .mapboxgl-ctrl-attrib a {
+          color: rgba(255, 255, 255, 0.7) !important;
+        }
+        .mapboxgl-ctrl-bottom-right .mapboxgl-ctrl-attrib {
+          margin-right: 0 !important;
+          margin-bottom: 0 !important;
+          position: fixed !important;
+          bottom: 0 !important;
+          right: 0 !important;
+        }
+        .mapboxgl-ctrl-logo {
+          position: fixed !important;
+          bottom: 0 !important;
+          left: 0 !important;
+          margin: 0 0 2px 4px !important;
+        }
+      `}</style>
+      <div ref={mapContainer} className="absolute inset-0" style={{ width: '100%', height: '100%' }} />
       {!isLoaded && (
-        <div className="absolute inset-0 flex items-center justify-center bg-muted/50 rounded-lg">
+        <div className="absolute inset-0 flex items-center justify-center bg-muted/50">
           <div className="text-sm text-muted-foreground">Loading map...</div>
         </div>
       )}
