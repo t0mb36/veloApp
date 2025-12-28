@@ -1,6 +1,7 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
+import Link from 'next/link'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { useAuthContext } from '@/contexts/auth-context'
 import { useViewMode } from '@/contexts/view-mode-context'
@@ -23,10 +24,16 @@ import {
   Globe,
   Plus,
   X,
-  Save,
   Briefcase,
   Star,
   MessageSquare,
+  ArrowRight,
+  Clock,
+  CreditCard,
+  CalendarRange,
+  ChevronDown,
+  ChevronUp,
+  Sparkles,
 } from 'lucide-react'
 
 // Available specialties for coaches to choose from
@@ -99,6 +106,51 @@ const mockReviews: Review[] = [
   },
 ]
 
+// Coach Services data model
+interface ServiceBundle {
+  credits: number
+  price: number
+  expirationMonths?: number // undefined = never expires
+}
+
+interface CoachService {
+  id: string
+  name: string
+  type: 'session' | 'program' | 'custom'
+  price: number
+  duration?: number // in minutes for sessions, weeks for programs
+  durationUnit?: 'minutes' | 'weeks'
+  bundle?: ServiceBundle // optional bundle offer for sessions
+  description?: string
+  isActive: boolean
+}
+
+const mockServices: CoachService[] = [
+  {
+    id: '1',
+    name: 'Private Lesson',
+    type: 'session',
+    duration: 60,
+    price: 85,
+    bundle: {
+      credits: 10,
+      price: 750,
+      expirationMonths: 6,
+    },
+    description: 'One-on-one personalized coaching session',
+    isActive: true,
+  },
+  {
+    id: '2',
+    name: 'Group Session',
+    type: 'session',
+    duration: 60,
+    price: 45,
+    description: 'Small group training (2-4 people)',
+    isActive: true,
+  },
+]
+
 interface CoachProfile {
   firstName: string
   lastName: string
@@ -107,8 +159,6 @@ interface CoachProfile {
   bio: string
   location: string
   specialties: string[]
-  services: string[]
-  hourlyRate: string
   instagram: string
   twitter: string
   linkedin: string
@@ -128,8 +178,6 @@ export default function ProfilePage() {
     bio: '',
     location: '',
     specialties: [],
-    services: [],
-    hourlyRate: '',
     instagram: '',
     twitter: '',
     linkedin: '',
@@ -137,8 +185,38 @@ export default function ProfilePage() {
     profileImage: null,
   })
 
-  const [newService, setNewService] = useState('')
   const [showSpecialtyPicker, setShowSpecialtyPicker] = useState(false)
+  const [showAllServices, setShowAllServices] = useState(false)
+
+  // Services are managed in Studio, here we just display them
+  const services = mockServices.filter((s) => s.isActive)
+  const MAX_VISIBLE_SERVICES = 3
+  const visibleServices = showAllServices ? services : services.slice(0, MAX_VISIBLE_SERVICES)
+  const hasMoreServices = services.length > MAX_VISIBLE_SERVICES
+  const fileInputRef = useRef<HTMLInputElement>(null)
+  const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null)
+
+  // Auto-save function with debounce
+  const autoSave = useCallback((profileData: CoachProfile) => {
+    // Clear any pending save
+    if (saveTimeoutRef.current) {
+      clearTimeout(saveTimeoutRef.current)
+    }
+    // Debounce save by 1 second
+    saveTimeoutRef.current = setTimeout(() => {
+      // TODO: Save to backend
+      console.log('Auto-saving profile:', profileData)
+    }, 1000)
+  }, [])
+
+  // Cleanup timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (saveTimeoutRef.current) {
+        clearTimeout(saveTimeoutRef.current)
+      }
+    }
+  }, [])
 
   // Pre-populate email from user data
   useEffect(() => {
@@ -148,45 +226,41 @@ export default function ProfilePage() {
   }, [user])
 
   const handleInputChange = (field: keyof CoachProfile, value: string) => {
-    setProfile((prev) => ({ ...prev, [field]: value }))
+    const newProfile = { ...profile, [field]: value }
+    setProfile(newProfile)
+    autoSave(newProfile)
   }
 
   const handleAddSpecialty = (specialty: string) => {
     if (!profile.specialties.includes(specialty)) {
-      setProfile((prev) => ({
-        ...prev,
-        specialties: [...prev.specialties, specialty],
-      }))
+      const newProfile = {
+        ...profile,
+        specialties: [...profile.specialties, specialty],
+      }
+      setProfile(newProfile)
+      autoSave(newProfile)
     }
   }
 
   const handleRemoveSpecialty = (specialty: string) => {
-    setProfile((prev) => ({
-      ...prev,
-      specialties: prev.specialties.filter((s) => s !== specialty),
-    }))
-  }
-
-  const handleAddService = () => {
-    if (newService.trim() && !profile.services.includes(newService.trim())) {
-      setProfile((prev) => ({
-        ...prev,
-        services: [...prev.services, newService.trim()],
-      }))
-      setNewService('')
+    const newProfile = {
+      ...profile,
+      specialties: profile.specialties.filter((s) => s !== specialty),
     }
+    setProfile(newProfile)
+    autoSave(newProfile)
   }
 
-  const handleRemoveService = (service: string) => {
-    setProfile((prev) => ({
-      ...prev,
-      services: prev.services.filter((s) => s !== service),
-    }))
-  }
-
-  const handleSave = () => {
-    // TODO: Save to backend
-    console.log('Saving profile:', profile)
+  const handlePhotoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (file) {
+      // Create a preview URL for the uploaded image
+      const imageUrl = URL.createObjectURL(file)
+      const newProfile = { ...profile, profileImage: imageUrl }
+      setProfile(newProfile)
+      autoSave(newProfile)
+      // TODO: Upload to backend storage and get permanent URL
+    }
   }
 
   const getInitials = () => {
@@ -197,24 +271,6 @@ export default function ProfilePage() {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-xl sm:text-2xl font-bold">
-            {viewMode === 'coach' ? 'Coach Profile' : 'Student Profile'}
-          </h1>
-          <p className="text-sm text-muted-foreground">
-            {viewMode === 'coach'
-              ? 'Manage your public coaching profile'
-              : 'Manage your personal information'}
-          </p>
-        </div>
-        <Button onClick={handleSave} className="gap-2 w-full sm:w-auto">
-          <Save className="h-4 w-4" />
-          Save Changes
-        </Button>
-      </div>
-
       {/* Main Content - 2/3 + 1/3 layout on large screens */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Left Column - Profile Card (takes 2 columns on lg) */}
@@ -229,18 +285,39 @@ export default function ProfilePage() {
             <CardContent className="space-y-6">
               {/* Profile Picture & Basic Info */}
               <div className="flex flex-col sm:flex-row gap-6 sm:gap-8">
-                {/* Avatar */}
-                <div className="flex flex-col items-center gap-4">
-                  <Avatar className="h-32 w-32 sm:h-40 sm:w-40 lg:h-48 lg:w-48">
-                    <AvatarImage src={profile.profileImage || undefined} />
-                    <AvatarFallback className="text-3xl sm:text-4xl lg:text-5xl bg-primary text-primary-foreground">
-                      {getInitials()}
-                    </AvatarFallback>
-                  </Avatar>
-                  <Button variant="outline" size="sm">
-                    <Camera className="h-4 w-4 mr-1" />
-                    Upload Photo
-                  </Button>
+                {/* Avatar with Upload Overlay */}
+                <div className="flex flex-col items-center">
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept="image/*"
+                    onChange={handlePhotoUpload}
+                    className="hidden"
+                  />
+                  <button
+                    onClick={() => fileInputRef.current?.click()}
+                    className="relative group cursor-pointer"
+                  >
+                    <Avatar className="h-32 w-32 sm:h-40 sm:w-40 lg:h-48 lg:w-48">
+                      <AvatarImage src={profile.profileImage || undefined} />
+                      <AvatarFallback className="text-3xl sm:text-4xl lg:text-5xl bg-primary text-primary-foreground">
+                        {getInitials()}
+                      </AvatarFallback>
+                    </Avatar>
+                    {/* Upload overlay - always visible when no photo, hover when photo exists */}
+                    <div
+                      className={`absolute inset-0 flex flex-col items-center justify-center rounded-full bg-black/50 transition-opacity ${
+                        profile.profileImage
+                          ? 'opacity-0 group-hover:opacity-100'
+                          : 'opacity-100'
+                      }`}
+                    >
+                      <Camera className="h-6 w-6 sm:h-8 sm:w-8 text-white" />
+                      <span className="text-white text-xs sm:text-sm mt-1">
+                        {profile.profileImage ? 'Change' : 'Upload'}
+                      </span>
+                    </div>
+                  </button>
                 </div>
 
                 {/* Name, Location & Contact */}
@@ -451,56 +528,88 @@ export default function ProfilePage() {
                   )}
                 </div>
 
-                {/* Services Offered */}
+                {/* Services Overview (Read-only) */}
                 <div className="space-y-3">
-                  <Label>Services Offered</Label>
-                  <div className="flex flex-wrap gap-2">
-                    {profile.services.map((service) => (
-                      <Badge key={service} variant="secondary" className="gap-1 pr-1">
-                        {service}
+                  <div className="flex items-center justify-between">
+                    <Label>Services & Pricing</Label>
+                    <Link href="/studio?tab=services">
+                      <Button variant="ghost" size="sm" className="h-7 gap-1 text-xs text-primary">
+                        Manage in Studio
+                        <ArrowRight className="h-3 w-3" />
+                      </Button>
+                    </Link>
+                  </div>
+                  {services.length === 0 ? (
+                    <div className="rounded-lg border border-dashed p-4 text-center">
+                      <p className="text-sm text-muted-foreground">No services configured yet</p>
+                      <Link href="/studio?tab=services">
+                        <Button variant="outline" size="sm" className="mt-2 gap-1">
+                          <Plus className="h-3 w-3" />
+                          Add Services
+                        </Button>
+                      </Link>
+                    </div>
+                  ) : (
+                    <div className="space-y-2">
+                      <div className="grid gap-2">
+                        {visibleServices.map((service) => (
+                          <div
+                            key={service.id}
+                            className="rounded-lg border p-3"
+                          >
+                            <div className="flex items-center justify-between">
+                              <div className="flex items-center gap-3">
+                                {service.type === 'session' && <Clock className="h-4 w-4 text-muted-foreground" />}
+                                {service.type === 'program' && <CalendarRange className="h-4 w-4 text-muted-foreground" />}
+                                {service.type === 'custom' && <Sparkles className="h-4 w-4 text-muted-foreground" />}
+                                <div>
+                                  <div className="flex items-center gap-2">
+                                    <p className="text-sm font-medium">{service.name}</p>
+                                    {service.bundle && (
+                                      <Badge variant="outline" className="text-[10px] px-1.5 py-0 gap-0.5">
+                                        <CreditCard className="h-2.5 w-2.5" />
+                                        Bundle
+                                      </Badge>
+                                    )}
+                                  </div>
+                                  <p className="text-xs text-muted-foreground">
+                                    {service.type === 'session' && `${service.duration} min`}
+                                    {service.type === 'program' && `${service.duration} weeks`}
+                                    {service.type === 'custom' && (service.duration ? `${service.duration} min` : 'Custom')}
+                                  </p>
+                                </div>
+                              </div>
+                              <p className="text-sm font-semibold">${service.price}</p>
+                            </div>
+                            {service.bundle && (
+                              <p className="text-xs text-green-600 mt-2 ml-7">
+                                Bundle: {service.bundle.credits} for ${service.bundle.price}
+                                {service.bundle.expirationMonths && ` • ${service.bundle.expirationMonths} mo`}
+                              </p>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                      {hasMoreServices && (
                         <button
-                          onClick={() => handleRemoveService(service)}
-                          className="ml-1 rounded-full p-0.5 hover:bg-muted-foreground/20"
+                          onClick={() => setShowAllServices(!showAllServices)}
+                          className="flex w-full items-center justify-center gap-1 py-2 text-xs text-muted-foreground hover:text-foreground transition-colors"
                         >
-                          <X className="h-3 w-3" />
+                          {showAllServices ? (
+                            <>
+                              Show less
+                              <ChevronUp className="h-3 w-3" />
+                            </>
+                          ) : (
+                            <>
+                              +{services.length - MAX_VISIBLE_SERVICES} more services
+                              <ChevronDown className="h-3 w-3" />
+                            </>
+                          )}
                         </button>
-                      </Badge>
-                    ))}
-                  </div>
-                  <div className="flex flex-col sm:flex-row gap-2">
-                    <Input
-                      placeholder="e.g., Private lessons, Group classes"
-                      value={newService}
-                      onChange={(e) => setNewService(e.target.value)}
-                      onKeyDown={(e) => e.key === 'Enter' && handleAddService()}
-                    />
-                    <Button
-                      variant="outline"
-                      onClick={handleAddService}
-                      disabled={!newService.trim()}
-                      className="sm:w-auto"
-                    >
-                      <Plus className="h-4 w-4 mr-1 sm:mr-0" />
-                      <span className="sm:hidden">Add Service</span>
-                    </Button>
-                  </div>
-                </div>
-
-                {/* Hourly Rate */}
-                <div className="space-y-2">
-                  <Label htmlFor="hourlyRate-mobile">Hourly Rate</Label>
-                  <div className="relative w-full sm:w-48">
-                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">$</span>
-                    <Input
-                      id="hourlyRate-mobile"
-                      type="number"
-                      placeholder="0"
-                      value={profile.hourlyRate}
-                      onChange={(e) => handleInputChange('hourlyRate', e.target.value)}
-                      className="pl-7"
-                    />
-                    <span className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">/hr</span>
-                  </div>
+                      )}
+                    </div>
+                  )}
                 </div>
               </CardContent>
             </Card>
@@ -629,56 +738,86 @@ export default function ProfilePage() {
                   )}
                 </div>
 
-                {/* Services Offered */}
+                {/* Services Overview (Read-only) */}
                 <div className="space-y-3">
-                  <Label>Services Offered</Label>
-                  <div className="flex flex-wrap gap-2">
-                    {profile.services.map((service) => (
-                      <Badge key={service} variant="secondary" className="gap-1 pr-1">
-                        {service}
-                        <button
-                          onClick={() => handleRemoveService(service)}
-                          className="ml-1 rounded-full p-0.5 hover:bg-muted-foreground/20"
+                  <div className="flex items-center justify-between">
+                    <Label>Services & Pricing</Label>
+                    <Link href="/studio?tab=services">
+                      <Button variant="ghost" size="sm" className="h-7 gap-1 text-xs text-primary">
+                        Manage
+                        <ArrowRight className="h-3 w-3" />
+                      </Button>
+                    </Link>
+                  </div>
+                  {services.length === 0 ? (
+                    <div className="rounded-lg border border-dashed p-4 text-center">
+                      <p className="text-sm text-muted-foreground">No services yet</p>
+                      <Link href="/studio?tab=services">
+                        <Button variant="outline" size="sm" className="mt-2 gap-1">
+                          <Plus className="h-3 w-3" />
+                          Add
+                        </Button>
+                      </Link>
+                    </div>
+                  ) : (
+                    <div className="space-y-2">
+                      {visibleServices.map((service) => (
+                        <div
+                          key={service.id}
+                          className="rounded-lg border p-2.5"
                         >
-                          <X className="h-3 w-3" />
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-2">
+                              {service.type === 'session' && <Clock className="h-3.5 w-3.5 text-muted-foreground" />}
+                              {service.type === 'program' && <CalendarRange className="h-3.5 w-3.5 text-muted-foreground" />}
+                              {service.type === 'custom' && <Sparkles className="h-3.5 w-3.5 text-muted-foreground" />}
+                              <div>
+                                <div className="flex items-center gap-1.5">
+                                  <p className="text-sm font-medium">{service.name}</p>
+                                  {service.bundle && (
+                                    <Badge variant="outline" className="text-[10px] px-1 py-0 gap-0.5">
+                                      <CreditCard className="h-2.5 w-2.5" />
+                                      Bundle
+                                    </Badge>
+                                  )}
+                                </div>
+                                <p className="text-xs text-muted-foreground">
+                                  {service.type === 'session' && `${service.duration} min`}
+                                  {service.type === 'program' && `${service.duration} wks`}
+                                  {service.type === 'custom' && (service.duration ? `${service.duration} min` : 'Custom')}
+                                </p>
+                              </div>
+                            </div>
+                            <p className="text-sm font-semibold">${service.price}</p>
+                          </div>
+                          {service.bundle && (
+                            <p className="text-[10px] text-green-600 mt-1.5 ml-5">
+                              {service.bundle.credits} for ${service.bundle.price}
+                              {service.bundle.expirationMonths && ` • ${service.bundle.expirationMonths} mo`}
+                            </p>
+                          )}
+                        </div>
+                      ))}
+                      {hasMoreServices && (
+                        <button
+                          onClick={() => setShowAllServices(!showAllServices)}
+                          className="flex w-full items-center justify-center gap-1 py-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors"
+                        >
+                          {showAllServices ? (
+                            <>
+                              Less
+                              <ChevronUp className="h-3 w-3" />
+                            </>
+                          ) : (
+                            <>
+                              +{services.length - MAX_VISIBLE_SERVICES} more
+                              <ChevronDown className="h-3 w-3" />
+                            </>
+                          )}
                         </button>
-                      </Badge>
-                    ))}
-                  </div>
-                  <div className="space-y-2">
-                    <Input
-                      placeholder="e.g., Private lessons, Group classes"
-                      value={newService}
-                      onChange={(e) => setNewService(e.target.value)}
-                      onKeyDown={(e) => e.key === 'Enter' && handleAddService()}
-                    />
-                    <Button
-                      variant="outline"
-                      onClick={handleAddService}
-                      disabled={!newService.trim()}
-                      className="w-full"
-                    >
-                      <Plus className="h-4 w-4 mr-1" />
-                      Add Service
-                    </Button>
-                  </div>
-                </div>
-
-                {/* Hourly Rate */}
-                <div className="space-y-2">
-                  <Label htmlFor="hourlyRate-desktop">Hourly Rate</Label>
-                  <div className="relative">
-                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">$</span>
-                    <Input
-                      id="hourlyRate-desktop"
-                      type="number"
-                      placeholder="0"
-                      value={profile.hourlyRate}
-                      onChange={(e) => handleInputChange('hourlyRate', e.target.value)}
-                      className="pl-7"
-                    />
-                    <span className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">/hr</span>
-                  </div>
+                      )}
+                    </div>
+                  )}
                 </div>
               </CardContent>
             </Card>

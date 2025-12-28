@@ -6,7 +6,7 @@ import { usePathname, useRouter } from 'next/navigation'
 import { cn } from '@/lib/utils'
 import { Separator } from '@/components/ui/separator'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
-import { Home, Compass, BookOpen, Calendar, Settings, LogOut, GraduationCap, ChevronUp, Check, Users } from 'lucide-react'
+import { Home, Compass, BookOpen, Calendar, Settings, LogOut, GraduationCap, ChevronUp, Check, Users, Clapperboard } from 'lucide-react'
 import { useAuthContext } from '@/contexts/auth-context'
 import { useViewMode, ViewMode } from '@/contexts/view-mode-context'
 
@@ -98,6 +98,16 @@ export function Sidebar({ className }: SidebarProps) {
         {mainNavItems.map((item) => (
           <NavItemComponent key={item.href} item={item} />
         ))}
+        {/* Coach-only: Studio */}
+        {viewMode === 'coach' && (
+          <NavItemComponent
+            item={{
+              title: 'Studio',
+              icon: <Clapperboard className="h-5 w-5" />,
+              href: '/studio',
+            }}
+          />
+        )}
       </nav>
 
       <Separator />

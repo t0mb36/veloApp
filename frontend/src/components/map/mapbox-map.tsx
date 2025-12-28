@@ -292,10 +292,17 @@ export function MapboxMap({
           background: hsl(var(--accent)) !important;
         }
         .mapboxgl-ctrl-group button .mapboxgl-ctrl-icon {
-          filter: brightness(0) saturate(100%);
+          opacity: 0.6;
+        }
+        .mapboxgl-ctrl-group button:hover .mapboxgl-ctrl-icon {
+          opacity: 0.9;
         }
         .dark .mapboxgl-ctrl-group button .mapboxgl-ctrl-icon {
-          filter: brightness(0) saturate(100%) invert(1);
+          filter: invert(1);
+          opacity: 0.6;
+        }
+        .dark .mapboxgl-ctrl-group button:hover .mapboxgl-ctrl-icon {
+          opacity: 0.9;
         }
         .mapboxgl-ctrl-geolocate {
           width: 40px !important;
