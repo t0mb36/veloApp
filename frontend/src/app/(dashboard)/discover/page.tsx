@@ -1,7 +1,9 @@
 'use client'
 
-import { useState, useRef } from 'react'
+import { useState, useRef, useCallback } from 'react'
+import Link from 'next/link'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { CoachPreviewModal } from '@/components/coach-preview/coach-preview-modal'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { MapboxMap, MapMarker } from '@/components/map/mapbox-map'
@@ -41,104 +43,77 @@ interface Coach {
   longitude: number
 }
 
-// Mock data for coaches with coordinates
+// Mock data for coaches with coordinates (using UUIDs) - Santa Monica / Venice Beach area
 const mockYourCoaches: Coach[] = [
   {
-    id: '1',
+    id: 'c9a1f8e2-3b4d-5c6e-7f8a-9b0c1d2e3f4a',
     name: 'Sarah Johnson',
     image: 'https://images.unsplash.com/photo-1594381898411-846e7d193883?w=400&h=500&fit=crop',
     specialties: ['Tennis', 'Pickleball'],
     rating: 4.9,
-    reviewCount: 47,
-    location: 'San Francisco, CA',
+    reviewCount: 127,
+    location: 'Santa Monica, CA',
     hourlyRate: 85,
     bio: 'Former college tennis player with 10+ years of coaching experience.',
     isYourCoach: true,
-    latitude: 37.7749,
-    longitude: -122.4194,
+    latitude: 34.0195,
+    longitude: -118.4912,
   },
   {
-    id: '2',
+    id: 'd8b2e9f3-4c5e-6d7f-8a9b-0c1d2e3f4a5b',
     name: 'Mike Chen',
     image: 'https://images.unsplash.com/photo-1534438327276-14e5300c3a48?w=400&h=500&fit=crop',
     specialties: ['Basketball', 'Strength Training'],
     rating: 4.8,
-    reviewCount: 32,
-    location: 'San Francisco, CA',
+    reviewCount: 89,
+    location: 'Venice Beach, CA',
     hourlyRate: 75,
     bio: 'Certified personal trainer specializing in basketball performance.',
     isYourCoach: true,
-    latitude: 37.7849,
-    longitude: -122.4094,
-  },
-  {
-    id: '7',
-    name: 'Rachel Kim',
-    image: 'https://images.unsplash.com/photo-1571019614242-c5c5dee9f50b?w=400&h=500&fit=crop',
-    specialties: ['Running', 'Marathon'],
-    rating: 4.9,
-    reviewCount: 38,
-    location: 'San Francisco, CA',
-    hourlyRate: 70,
-    bio: 'Boston Marathon qualifier and certified running coach.',
-    isYourCoach: true,
-    latitude: 37.7649,
-    longitude: -122.4294,
+    latitude: 33.9850,
+    longitude: -118.4695,
   },
 ]
 
 const mockRecommendedCoaches: Coach[] = [
   {
-    id: '3',
+    id: 'e7c3f0a4-5d6f-7e8a-9b0c-1d2e3f4a5b6c',
     name: 'Emily Davis',
     image: 'https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=400&h=500&fit=crop',
     specialties: ['Swimming', 'Triathlon'],
     rating: 4.9,
-    reviewCount: 58,
-    location: 'Oakland, CA',
+    reviewCount: 156,
+    location: 'Marina del Rey, CA',
     hourlyRate: 90,
     bio: 'Olympic trials qualifier and certified swim instructor.',
-    latitude: 37.8044,
-    longitude: -122.2712,
+    latitude: 33.9802,
+    longitude: -118.4517,
   },
   {
-    id: '4',
+    id: 'f6d4a1b5-6e7a-8f9b-0c1d-2e3f4a5b6c7d',
     name: 'James Wilson',
     image: 'https://images.unsplash.com/photo-1535131749006-b7f58c99034b?w=400&h=500&fit=crop',
     specialties: ['Golf'],
     rating: 4.7,
-    reviewCount: 29,
-    location: 'Palo Alto, CA',
+    reviewCount: 203,
+    location: 'Pacific Palisades, CA',
     hourlyRate: 120,
     bio: 'PGA certified instructor with 15 years of teaching experience.',
-    latitude: 37.4419,
-    longitude: -122.1430,
+    latitude: 34.0459,
+    longitude: -118.5301,
   },
   {
-    id: '5',
+    id: 'a5e5b2c6-7f8b-9a0c-1d2e-3f4a5b6c7d8e',
     name: 'Lisa Park',
     image: 'https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?w=400&h=500&fit=crop',
     specialties: ['Yoga', 'Pilates'],
     rating: 5.0,
-    reviewCount: 64,
-    location: 'San Jose, CA',
+    reviewCount: 178,
+    location: 'Playa del Rey, CA',
     hourlyRate: 65,
     bio: 'RYT-500 certified yoga instructor focused on mindful movement.',
-    latitude: 37.3382,
-    longitude: -121.8863,
-  },
-  {
-    id: '6',
-    name: 'David Martinez',
-    image: 'https://images.unsplash.com/photo-1549476464-37392f717541?w=400&h=500&fit=crop',
-    specialties: ['Boxing', 'Martial Arts'],
-    rating: 4.8,
-    reviewCount: 41,
-    location: 'San Francisco, CA',
-    hourlyRate: 80,
-    bio: 'Professional boxing coach with competitive fighting background.',
-    latitude: 37.7599,
-    longitude: -122.4148,
+    latitude: 33.9575,
+    longitude: -118.4426,
   },
 ]
 
@@ -154,9 +129,12 @@ const sportFilters = [
 ]
 
 // Trading card style component for "Your Coaches" carousel
-function CoachTradingCard({ coach }: { coach: Coach }) {
+function CoachTradingCard({ coach, onClick }: { coach: Coach; onClick: (e: React.MouseEvent<HTMLDivElement>) => void }) {
   return (
-    <Card className="w-48 shrink-0 overflow-hidden hover:shadow-lg transition-shadow cursor-pointer">
+    <Card
+      className="w-48 shrink-0 overflow-hidden hover:shadow-lg transition-all cursor-pointer hover:scale-[1.02]"
+      onClick={onClick}
+    >
       <div className="relative w-full h-[320px] overflow-hidden bg-gradient-to-b from-primary/10 to-primary/5">
         <img
           src={coach.image}
@@ -192,11 +170,23 @@ function CoachTradingCard({ coach }: { coach: Coach }) {
           )}
         </div>
         <div className="flex gap-1.5 pt-1">
-          <Button size="sm" className="flex-1 h-7 text-xs">
+          <Button
+            size="sm"
+            className="flex-1 h-7 text-xs"
+            onClick={(e) => {
+              e.stopPropagation()
+              // Direct booking - would go to booking flow
+            }}
+          >
             <Calendar className="h-3 w-3 mr-1" />
             Book
           </Button>
-          <Button size="sm" variant="outline" className="h-7 w-7 p-0">
+          <Button
+            size="sm"
+            variant="outline"
+            className="h-7 w-7 p-0"
+            onClick={(e) => e.stopPropagation()}
+          >
             <MessageSquare className="h-3 w-3" />
           </Button>
         </div>
@@ -206,9 +196,12 @@ function CoachTradingCard({ coach }: { coach: Coach }) {
 }
 
 // Grid card for recommended coaches
-function CoachCard({ coach }: { coach: Coach }) {
+function CoachCard({ coach, onClick }: { coach: Coach; onClick: (e: React.MouseEvent<HTMLDivElement>) => void }) {
   return (
-    <Card className="overflow-hidden hover:shadow-lg transition-shadow group cursor-pointer">
+    <Card
+      className="overflow-hidden hover:shadow-lg transition-all group cursor-pointer hover:scale-[1.02]"
+      onClick={onClick}
+    >
       <div className="relative aspect-[4/3] overflow-hidden bg-gradient-to-b from-primary/10 to-primary/5">
         <img
           src={coach.image}
@@ -241,11 +234,23 @@ function CoachCard({ coach }: { coach: Coach }) {
         </div>
         <p className="text-sm text-muted-foreground line-clamp-2">{coach.bio}</p>
         <div className="flex gap-2 pt-1">
-          <Button size="sm" className="flex-1">
+          <Button
+            size="sm"
+            className="flex-1"
+            onClick={(e) => {
+              e.stopPropagation()
+              // Direct booking - would go to booking flow
+            }}
+          >
             <Calendar className="h-4 w-4 mr-1.5" />
             Book Session
           </Button>
-          <Button size="sm" variant="outline" className="px-3">
+          <Button
+            size="sm"
+            variant="outline"
+            className="px-3"
+            onClick={(e) => e.stopPropagation()}
+          >
             <MessageSquare className="h-4 w-4" />
           </Button>
         </div>
@@ -260,7 +265,7 @@ function SelectedCoachPanel({ coach, onClose }: { coach: Coach; onClose: () => v
     <Card className="absolute bottom-4 left-4 w-80 z-10 shadow-lg">
       <CardHeader className="pb-2">
         <div className="flex items-start justify-between">
-          <div className="flex items-center gap-3">
+          <Link href={`/coaches/${coach.id}`} className="flex items-center gap-3 hover:opacity-80 transition-opacity">
             <img
               src={coach.image}
               alt={coach.name}
@@ -270,7 +275,7 @@ function SelectedCoachPanel({ coach, onClose }: { coach: Coach; onClose: () => v
               <CardTitle className="text-base">{coach.name}</CardTitle>
               <p className="text-sm text-muted-foreground">{coach.location}</p>
             </div>
-          </div>
+          </Link>
           <Button variant="ghost" size="icon" className="h-8 w-8" onClick={onClose}>
             <X className="h-4 w-4" />
           </Button>
@@ -294,10 +299,11 @@ function SelectedCoachPanel({ coach, onClose }: { coach: Coach; onClose: () => v
         </div>
         <p className="text-sm text-muted-foreground mb-3 line-clamp-2">{coach.bio}</p>
         <div className="flex gap-2">
-          <Button size="sm" className="flex-1">
-            <Calendar className="h-4 w-4 mr-1.5" />
-            Book Session
-          </Button>
+          <Link href={`/coaches/${coach.id}`} className="flex-1">
+            <Button size="sm" className="w-full">
+              View Profile
+            </Button>
+          </Link>
           <Button size="sm" variant="outline">
             <MessageSquare className="h-4 w-4" />
           </Button>
@@ -322,8 +328,31 @@ export default function DiscoverPage() {
   // Map state
   const [selectedCoach, setSelectedCoach] = useState<Coach | null>(null)
 
+  // Preview modal state
+  const [previewCoach, setPreviewCoach] = useState<Coach | null>(null)
+  const [isPreviewOpen, setIsPreviewOpen] = useState(false)
+  const [triggerRect, setTriggerRect] = useState<DOMRect | null>(null)
+
   // Carousel ref
   const carouselRef = useRef<HTMLDivElement>(null)
+
+  // Handle opening the preview modal
+  const handleCoachClick = useCallback((coach: Coach, e: React.MouseEvent<HTMLDivElement>) => {
+    const rect = e.currentTarget.getBoundingClientRect()
+    setTriggerRect(rect)
+    setPreviewCoach(coach)
+    setIsPreviewOpen(true)
+  }, [])
+
+  // Handle closing the preview modal
+  const handleClosePreview = useCallback(() => {
+    setIsPreviewOpen(false)
+    // Delay clearing coach data for exit animation
+    setTimeout(() => {
+      setPreviewCoach(null)
+      setTriggerRect(null)
+    }, 800)
+  }, [])
 
   // Filter coaches
   const filterCoaches = (coaches: Coach[]) => {
@@ -357,7 +386,7 @@ export default function DiscoverPage() {
   const filteredRecommendedCoaches = filterCoaches(mockRecommendedCoaches)
   const allFilteredCoaches = [...filteredYourCoaches, ...filteredRecommendedCoaches]
 
-  // Convert coaches to map markers
+  // Convert coaches to map markers with full data for enhanced display
   const mapMarkers: MapMarker[] = allFilteredCoaches.map((coach) => ({
     id: coach.id,
     longitude: coach.longitude,
@@ -366,7 +395,11 @@ export default function DiscoverPage() {
     title: coach.name,
     subtitle: coach.specialties.join(', '),
     rating: coach.rating,
+    reviewCount: coach.reviewCount,
     specialties: coach.specialties,
+    image: coach.image,
+    hourlyRate: coach.hourlyRate,
+    bio: coach.bio,
   }))
 
   // Carousel scroll handlers
@@ -728,7 +761,10 @@ export default function DiscoverPage() {
               >
                 {filteredYourCoaches.map((coach) => (
                   <div key={coach.id} className="snap-start">
-                    <CoachTradingCard coach={coach} />
+                    <CoachTradingCard
+                      coach={coach}
+                      onClick={(e) => handleCoachClick(coach, e)}
+                    />
                   </div>
                 ))}
               </div>
@@ -760,12 +796,24 @@ export default function DiscoverPage() {
             ) : (
               <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
                 {filteredRecommendedCoaches.map((coach) => (
-                  <CoachCard key={coach.id} coach={coach} />
+                  <CoachCard
+                    key={coach.id}
+                    coach={coach}
+                    onClick={(e) => handleCoachClick(coach, e)}
+                  />
                 ))}
               </div>
             )}
           </div>
         </div>
+
+        {/* Coach Preview Modal */}
+        <CoachPreviewModal
+          coach={previewCoach}
+          isOpen={isPreviewOpen}
+          onClose={handleClosePreview}
+          triggerRect={triggerRect}
+        />
       </div>
     )
   }

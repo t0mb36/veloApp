@@ -16,7 +16,11 @@ export interface MapMarker {
   title: string
   subtitle?: string
   rating?: number
+  reviewCount?: number
   specialties?: string[]
+  image?: string
+  hourlyRate?: number
+  bio?: string
 }
 
 interface MapboxMapProps {
@@ -177,41 +181,225 @@ export function MapboxMap({
 
     // Add new markers
     markers.forEach((markerData) => {
-      // Create custom marker element
+      // Create custom marker element with enhanced coach display
       const el = document.createElement('div')
       el.className = 'mapbox-marker'
       el.style.cursor = 'pointer'
 
-      // Style based on type
-      const colors = {
-        coach: '#3b82f6', // blue
-        student: '#22c55e', // green
-        location: '#f59e0b', // amber
-      }
+      // For coach type with image, create enhanced marker
+      if (markerData.type === 'coach' && markerData.image) {
+        el.innerHTML = `
+          <div class="coach-marker-container" style="
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            transition: all 0.2s ease;
+          ">
+            <!-- Condensed view (always visible) -->
+            <div class="coach-marker-condensed" style="
+              display: flex;
+              align-items: center;
+              gap: 6px;
+              background: white;
+              padding: 4px 8px 4px 4px;
+              border-radius: 24px;
+              box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+              border: 2px solid white;
+              transition: all 0.2s ease;
+            ">
+              <img
+                src="${markerData.image}"
+                alt="${markerData.title}"
+                style="
+                  width: 32px;
+                  height: 32px;
+                  border-radius: 50%;
+                  object-fit: cover;
+                  border: 2px solid #3b82f6;
+                "
+              />
+              <div style="display: flex; flex-direction: column; line-height: 1.2;">
+                <span style="font-size: 11px; font-weight: 600; color: #1f2937; white-space: nowrap; max-width: 80px; overflow: hidden; text-overflow: ellipsis;">
+                  ${markerData.title.split(' ')[0]}
+                </span>
+                <div style="display: flex; align-items: center; gap: 4px;">
+                  ${markerData.hourlyRate ? `<span style="font-size: 10px; font-weight: 600; color: #3b82f6;">$${markerData.hourlyRate}</span>` : ''}
+                  ${markerData.rating ? `
+                    <span style="display: flex; align-items: center; gap: 1px;">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="#facc15" stroke="#facc15" stroke-width="1">
+                        <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+                      </svg>
+                      <span style="font-size: 10px; color: #6b7280;">${markerData.rating}</span>
+                    </span>
+                  ` : ''}
+                </div>
+              </div>
+            </div>
+            <!-- Expanded view (shown on hover) -->
+            <div class="coach-marker-expanded" style="
+              display: none;
+              position: absolute;
+              top: 100%;
+              left: 50%;
+              transform: translateX(-50%);
+              margin-top: 8px;
+              background: white;
+              padding: 12px;
+              border-radius: 12px;
+              box-shadow: 0 4px 16px rgba(0,0,0,0.15);
+              min-width: 200px;
+              max-width: 250px;
+              z-index: 100;
+            ">
+              <div style="display: flex; gap: 10px; margin-bottom: 8px;">
+                <img
+                  src="${markerData.image}"
+                  alt="${markerData.title}"
+                  style="
+                    width: 48px;
+                    height: 48px;
+                    border-radius: 50%;
+                    object-fit: cover;
+                    border: 2px solid #3b82f6;
+                  "
+                />
+                <div>
+                  <div style="font-size: 14px; font-weight: 600; color: #1f2937;">${markerData.title}</div>
+                  <div style="display: flex; align-items: center; gap: 4px; margin-top: 2px;">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="#facc15" stroke="#facc15" stroke-width="1">
+                      <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+                    </svg>
+                    <span style="font-size: 12px; font-weight: 500; color: #1f2937;">${markerData.rating || 'N/A'}</span>
+                    <span style="font-size: 11px; color: #6b7280;">(${markerData.reviewCount || 0} reviews)</span>
+                  </div>
+                </div>
+              </div>
+              ${markerData.specialties && markerData.specialties.length > 0 ? `
+                <div style="display: flex; flex-wrap: wrap; gap: 4px; margin-bottom: 8px;">
+                  ${markerData.specialties.slice(0, 3).map(s => `
+                    <span style="
+                      font-size: 10px;
+                      padding: 2px 6px;
+                      background: #f3f4f6;
+                      border-radius: 4px;
+                      color: #4b5563;
+                    ">${s}</span>
+                  `).join('')}
+                </div>
+              ` : ''}
+              ${markerData.bio ? `
+                <p style="
+                  font-size: 11px;
+                  color: #6b7280;
+                  margin-bottom: 10px;
+                  line-height: 1.4;
+                  display: -webkit-box;
+                  -webkit-line-clamp: 2;
+                  -webkit-box-orient: vertical;
+                  overflow: hidden;
+                ">${markerData.bio}</p>
+              ` : ''}
+              <div style="display: flex; align-items: center; justify-content: space-between;">
+                <span style="font-size: 14px; font-weight: 600; color: #3b82f6;">
+                  ${markerData.hourlyRate ? `From $${markerData.hourlyRate}/hr` : 'Contact for rates'}
+                </span>
+                <span style="
+                  font-size: 11px;
+                  color: #3b82f6;
+                  font-weight: 500;
+                ">View Profile →</span>
+              </div>
+            </div>
+            <!-- Pointer triangle -->
+            <div style="
+              width: 0;
+              height: 0;
+              border-left: 8px solid transparent;
+              border-right: 8px solid transparent;
+              border-top: 8px solid white;
+              margin-top: -2px;
+              filter: drop-shadow(0 2px 2px rgba(0,0,0,0.1));
+            "></div>
+          </div>
+        `
 
-      el.innerHTML = `
-        <div style="
-          width: 32px;
-          height: 32px;
-          background-color: ${colors[markerData.type]};
-          border: 3px solid white;
-          border-radius: 50%;
-          box-shadow: 0 2px 4px rgba(0,0,0,0.3);
-          display: flex;
-          align-items: center;
-          justify-content: center;
-        ">
-          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            ${
-              markerData.type === 'coach'
-                ? '<path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path>'
-                : markerData.type === 'student'
-                  ? '<path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle>'
-                  : '<path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle>'
-            }
-          </svg>
-        </div>
-      `
+        // Add hover effects
+        el.addEventListener('mouseenter', () => {
+          const condensed = el.querySelector('.coach-marker-condensed') as HTMLElement
+          const expanded = el.querySelector('.coach-marker-expanded') as HTMLElement
+          if (condensed) {
+            condensed.style.boxShadow = '0 4px 12px rgba(0,0,0,0.2)'
+            condensed.style.transform = 'scale(1.05)'
+          }
+          if (expanded) {
+            expanded.style.display = 'block'
+          }
+        })
+
+        el.addEventListener('mouseleave', () => {
+          const condensed = el.querySelector('.coach-marker-condensed') as HTMLElement
+          const expanded = el.querySelector('.coach-marker-expanded') as HTMLElement
+          if (condensed) {
+            condensed.style.boxShadow = '0 2px 8px rgba(0,0,0,0.15)'
+            condensed.style.transform = 'scale(1)'
+          }
+          if (expanded) {
+            expanded.style.display = 'none'
+          }
+        })
+      } else {
+        // Fallback to simple marker for non-coach types
+        const colors = {
+          coach: '#3b82f6',
+          student: '#22c55e',
+          location: '#f59e0b',
+        }
+
+        el.innerHTML = `
+          <div style="
+            width: 32px;
+            height: 32px;
+            background-color: ${colors[markerData.type]};
+            border: 3px solid white;
+            border-radius: 50%;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+          ">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              ${
+                markerData.type === 'coach'
+                  ? '<path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path>'
+                  : markerData.type === 'student'
+                    ? '<path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle>'
+                    : '<path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle>'
+              }
+            </svg>
+          </div>
+        `
+
+        // Add popup on hover for non-coach markers
+        const popup = new mapboxgl.Popup({
+          closeButton: false,
+          closeOnClick: false,
+          offset: 20,
+        }).setHTML(`
+          <div style="padding: 4px;">
+            <strong>${markerData.title}</strong>
+            ${markerData.subtitle ? `<br/><span style="color: #666; font-size: 12px;">${markerData.subtitle}</span>` : ''}
+          </div>
+        `)
+
+        el.addEventListener('mouseenter', () => {
+          popup.setLngLat([markerData.longitude, markerData.latitude]).addTo(map.current!)
+        })
+
+        el.addEventListener('mouseleave', () => {
+          popup.remove()
+        })
+      }
 
       const marker = new mapboxgl.Marker(el)
         .setLngLat([markerData.longitude, markerData.latitude])
@@ -220,26 +408,6 @@ export function MapboxMap({
       // Add click handler
       el.addEventListener('click', () => {
         onMarkerClick?.(markerData)
-      })
-
-      // Add popup on hover
-      const popup = new mapboxgl.Popup({
-        closeButton: false,
-        closeOnClick: false,
-        offset: 20,
-      }).setHTML(`
-        <div style="padding: 4px;">
-          <strong>${markerData.title}</strong>
-          ${markerData.subtitle ? `<br/><span style="color: #666; font-size: 12px;">${markerData.subtitle}</span>` : ''}
-        </div>
-      `)
-
-      el.addEventListener('mouseenter', () => {
-        popup.setLngLat([markerData.longitude, markerData.latitude]).addTo(map.current!)
-      })
-
-      el.addEventListener('mouseleave', () => {
-        popup.remove()
       })
 
       markersRef.current.push(marker)

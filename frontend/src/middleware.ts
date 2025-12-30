@@ -13,7 +13,7 @@ import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 
 // Routes that don't require authentication
-const publicRoutes = ['/login', '/api/auth']
+const publicRoutes = ['/login', '/api/auth', '/coaches']
 
 // Routes that should redirect to dashboard if already authenticated
 const authRoutes = ['/login']

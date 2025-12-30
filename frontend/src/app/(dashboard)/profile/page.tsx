@@ -34,6 +34,8 @@ import {
   ChevronDown,
   ChevronUp,
   Sparkles,
+  ExternalLink,
+  ImageIcon,
 } from 'lucide-react'
 
 // Available specialties for coaches to choose from
@@ -164,6 +166,7 @@ interface CoachProfile {
   linkedin: string
   website: string
   profileImage: string | null
+  bannerImage: string | null
 }
 
 export default function ProfilePage() {
@@ -183,6 +186,7 @@ export default function ProfilePage() {
     linkedin: '',
     website: '',
     profileImage: null,
+    bannerImage: null,
   })
 
   const [showSpecialtyPicker, setShowSpecialtyPicker] = useState(false)
@@ -194,6 +198,7 @@ export default function ProfilePage() {
   const visibleServices = showAllServices ? services : services.slice(0, MAX_VISIBLE_SERVICES)
   const hasMoreServices = services.length > MAX_VISIBLE_SERVICES
   const fileInputRef = useRef<HTMLInputElement>(null)
+  const bannerInputRef = useRef<HTMLInputElement>(null)
   const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null)
 
   // Auto-save function with debounce
@@ -263,6 +268,17 @@ export default function ProfilePage() {
     }
   }
 
+  const handleBannerUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (file) {
+      const imageUrl = URL.createObjectURL(file)
+      const newProfile = { ...profile, bannerImage: imageUrl }
+      setProfile(newProfile)
+      autoSave(newProfile)
+      // TODO: Upload to backend storage and get permanent URL
+    }
+  }
+
   const getInitials = () => {
     const first = profile.firstName?.[0] || ''
     const last = profile.lastName?.[0] || ''
@@ -272,17 +288,78 @@ export default function ProfilePage() {
   return (
     <div className="space-y-6">
       {/* Main Content - 2/3 + 1/3 layout on large screens */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 lg:items-stretch">
         {/* Left Column - Profile Card (takes 2 columns on lg) */}
-        <div className="lg:col-span-2 space-y-6">
-          <Card>
+        <div className="lg:col-span-2 flex flex-col gap-6">
+          <Card className="lg:flex-1 flex flex-col">
             <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-lg">
-                <User className="h-5 w-5" />
-                Profile
-              </CardTitle>
+              <div className="flex items-center justify-between">
+                <CardTitle className="flex items-center gap-2 text-lg">
+                  <User className="h-5 w-5" />
+                  Profile
+                </CardTitle>
+                {viewMode === 'coach' && (
+                  <Link href={`/coaches/c9a1f8e2-3b4d-5c6e-7f8a-9b0c1d2e3f4a`}>
+                    <Button variant="outline" size="sm" className="gap-2">
+                      <ExternalLink className="h-4 w-4" />
+                      View Public Profile
+                    </Button>
+                  </Link>
+                )}
+              </div>
             </CardHeader>
-            <CardContent className="space-y-6">
+            <CardContent className="space-y-6 flex-1">
+              {/* Banner Image Upload */}
+              {viewMode === 'coach' && (
+                <div className="space-y-2">
+                  <Label>Profile Banner</Label>
+                  <input
+                    ref={bannerInputRef}
+                    type="file"
+                    accept="image/*"
+                    onChange={handleBannerUpload}
+                    className="hidden"
+                  />
+                  <button
+                    onClick={() => bannerInputRef.current?.click()}
+                    className="relative w-full group cursor-pointer"
+                  >
+                    <div
+                      className={`w-full h-32 sm:h-40 rounded-lg overflow-hidden ${
+                        profile.bannerImage ? '' : 'border-2 border-dashed border-muted-foreground/30'
+                      }`}
+                    >
+                      {profile.bannerImage ? (
+                        <img
+                          src={profile.bannerImage}
+                          alt="Profile banner"
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        <div className="w-full h-full flex flex-col items-center justify-center bg-muted/50">
+                          <ImageIcon className="h-8 w-8 text-muted-foreground" />
+                          <span className="text-sm text-muted-foreground mt-2">
+                            Click to upload a banner image
+                          </span>
+                          <span className="text-xs text-muted-foreground/70 mt-1">
+                            Recommended: 1200 x 300 pixels
+                          </span>
+                        </div>
+                      )}
+                    </div>
+                    {/* Upload overlay on hover when banner exists */}
+                    {profile.bannerImage && (
+                      <div className="absolute inset-0 flex flex-col items-center justify-center rounded-lg bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <Camera className="h-8 w-8 text-white" />
+                        <span className="text-white text-sm mt-1">Change Banner</span>
+                      </div>
+                    )}
+                  </button>
+                </div>
+              )}
+
+              {viewMode === 'coach' && <Separator />}
+
               {/* Profile Picture & Basic Info */}
               <div className="flex flex-col sm:flex-row gap-6 sm:gap-8">
                 {/* Avatar with Upload Overlay */}
@@ -683,8 +760,8 @@ export default function ProfilePage() {
         {/* Right Column - Services & Reviews (only on lg screens for coach) */}
         {viewMode === 'coach' && (
           <div className="hidden lg:flex lg:flex-col lg:gap-6">
-            {/* Services Card */}
-            <Card>
+            {/* Services Card - fixed height based on content */}
+            <Card className="flex-shrink-0">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2 text-lg">
                   <Briefcase className="h-5 w-5" />
@@ -822,9 +899,9 @@ export default function ProfilePage() {
               </CardContent>
             </Card>
 
-            {/* Reviews Card */}
-            <Card>
-              <CardHeader>
+            {/* Reviews Card - grows to fill remaining space */}
+            <Card className="flex-1 flex flex-col min-h-0">
+              <CardHeader className="flex-shrink-0">
                 <div className="flex items-center justify-between">
                   <CardTitle className="flex items-center gap-2 text-lg">
                     <MessageSquare className="h-5 w-5" />
@@ -837,7 +914,7 @@ export default function ProfilePage() {
                   </div>
                 </div>
               </CardHeader>
-              <CardContent className="space-y-3">
+              <CardContent className="flex-1 flex flex-col gap-3 overflow-auto">
                 {mockReviews.slice(0, 3).map((review) => (
                   <div key={review.id} className="border rounded-lg p-3">
                     <div className="flex items-start justify-between gap-2 mb-2">
@@ -868,7 +945,7 @@ export default function ProfilePage() {
                   </div>
                 ))}
                 {mockReviews.length > 3 && (
-                  <Button variant="outline" size="sm" className="w-full">
+                  <Button variant="outline" size="sm" className="w-full mt-auto flex-shrink-0">
                     View All {mockReviews.length} Reviews
                   </Button>
                 )}
