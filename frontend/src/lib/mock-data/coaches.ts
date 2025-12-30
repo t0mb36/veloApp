@@ -21,6 +21,8 @@ export const mockCoachProfiles: Record<string, PublicCoachProfile> = {
     instagram: '@sarahtennis',
     twitter: '@coachsarahj',
     linkedin: 'sarahjohnsontennis',
+    tiktok: '@sarahtennis',
+    youtube: '@SarahJohnsonTennis',
     website: 'www.sarahjohnsontennis.com',
     profileImage: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=400',
     bannerImage: 'https://images.unsplash.com/photo-1554068865-24cecd4e34b8?w=1200',
@@ -40,6 +42,8 @@ export const mockCoachProfiles: Record<string, PublicCoachProfile> = {
     location: 'Venice Beach, CA',
     specialties: ['Basketball', 'Strength Training', 'Speed & Agility'],
     instagram: '@coachmikehoops',
+    tiktok: '@coachmikehoops',
+    youtube: '@CoachMikeChen',
     profileImage: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400',
     bannerImage: 'https://images.unsplash.com/photo-1546519638-68e109498ffc?w=1200',
     rating: 4.8,
@@ -59,6 +63,7 @@ export const mockCoachProfiles: Record<string, PublicCoachProfile> = {
     specialties: ['Swimming', 'Triathlon', 'Open Water'],
     instagram: '@emilydavisswim',
     twitter: '@coachemilyd',
+    youtube: '@EmilyDavisTriathlon',
     website: 'www.emilydavistriathlon.com',
     profileImage: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=400',
     bannerImage: 'https://images.unsplash.com/photo-1530549387789-4c1017266635?w=1200',
@@ -269,7 +274,12 @@ function generateAvailabilitySlots(coachId: string, serviceId: string): Availabi
   const slots: AvailabilitySlot[] = []
   const today = new Date()
 
-  for (let dayOffset = 1; dayOffset <= 7; dayOffset++) {
+  // More comprehensive time options
+  const morningTimes = ['06:00', '07:00', '08:00', '09:00', '10:00', '11:00']
+  const afternoonTimes = ['12:00', '13:00', '14:00', '15:00', '16:00', '17:00']
+  const eveningTimes = ['18:00', '19:00', '20:00', '21:00']
+
+  for (let dayOffset = 0; dayOffset <= 7; dayOffset++) {
     const date = new Date(today)
     date.setDate(date.getDate() + dayOffset)
     const dateStr = date.toISOString().split('T')[0]
@@ -278,18 +288,30 @@ function generateAvailabilitySlots(coachId: string, serviceId: string): Availabi
     const dayOfWeek = date.getDay()
     if (coachId === COACH_IDS.james && (dayOfWeek === 0 || dayOfWeek === 6)) continue
 
-    // Generate 2-4 slots per day
-    const times = ['09:00', '10:30', '14:00', '16:00']
-    const numSlots = Math.floor(Math.random() * 3) + 2
+    // Generate slots across different parts of the day
+    // Morning slots (pick 3-4 random)
+    const numMorning = Math.floor(Math.random() * 2) + 3
+    const shuffledMorning = [...morningTimes].sort(() => Math.random() - 0.5).slice(0, numMorning)
 
-    for (let i = 0; i < numSlots; i++) {
+    // Afternoon slots (pick 4-5 random)
+    const numAfternoon = Math.floor(Math.random() * 2) + 4
+    const shuffledAfternoon = [...afternoonTimes].sort(() => Math.random() - 0.5).slice(0, numAfternoon)
+
+    // Evening slots (pick 2-3 random)
+    const numEvening = Math.floor(Math.random() * 2) + 2
+    const shuffledEvening = [...eveningTimes].sort(() => Math.random() - 0.5).slice(0, numEvening)
+
+    const allTimes = [...shuffledMorning, ...shuffledAfternoon, ...shuffledEvening].sort()
+
+    for (const time of allTimes) {
+      const hour = parseInt(time.split(':')[0], 10)
       slots.push({
-        id: `slot-${coachId.slice(0, 8)}-${dateStr}-${i}`,
+        id: `slot-${coachId.slice(0, 8)}-${dateStr}-${time}`,
         date: dateStr,
-        startTime: times[i],
-        endTime: times[i].replace(':00', ':00').replace('09', '10').replace('10', '12').replace('14', '15').replace('16', '17'),
+        startTime: time,
+        endTime: `${(hour + 1).toString().padStart(2, '0')}:00`,
         serviceId,
-        isBooked: Math.random() > 0.8,
+        isBooked: Math.random() > 0.85, // 15% chance of being booked
       })
     }
   }

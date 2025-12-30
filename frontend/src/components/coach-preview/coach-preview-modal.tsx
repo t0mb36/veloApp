@@ -203,129 +203,130 @@ export function CoachPreviewModal({ coach, isOpen, onClose, triggerRect }: Coach
                 </div>
               </div>
               <div className="flex gap-2 shrink-0">
-                <Button variant="outline" size="icon" className="h-10 w-10 rounded-full">
-                  <Heart className="h-5 w-5" />
+                <Link href={`/coaches/${coach.id}`}>
+                  <Button variant="secondary" size="sm" className="gap-1.5">
+                    Full Profile
+                    <ExternalLink className="h-3 w-3" />
+                  </Button>
+                </Link>
+                <Button variant="outline" size="icon" className="h-9 w-9 rounded-full">
+                  <Heart className="h-4 w-4" />
                 </Button>
-                <Button variant="outline" size="icon" className="h-10 w-10 rounded-full">
-                  <MessageSquare className="h-5 w-5" />
+                <Button variant="outline" size="icon" className="h-9 w-9 rounded-full">
+                  <MessageSquare className="h-4 w-4" />
                 </Button>
               </div>
             </div>
           </div>
 
           {/* Body */}
-          <div className="p-6 space-y-6">
-            {/* Action Buttons - At Top */}
-            <div className="flex gap-3">
-              <Link href={`/coaches/${coach.id}`} className="flex-1">
-                <Button className="w-full gap-2" size="lg">
-                  View Full Profile
-                  <ExternalLink className="h-4 w-4" />
-                </Button>
-              </Link>
-              <Button variant="outline" size="lg" className="gap-2">
-                <Calendar className="h-4 w-4" />
-                Book Now
-              </Button>
+          <div className="p-6 space-y-4">
+            {/* Top Row: Specialties + Rate + Actions */}
+            <div className="flex items-start justify-between gap-4">
+              <div className="flex-1 min-w-0">
+                {/* Specialties */}
+                <div className="flex flex-wrap gap-1.5 mb-3">
+                  {coach.specialties.map((specialty) => (
+                    <Badge key={specialty} variant="secondary" className="text-xs">
+                      {specialty}
+                    </Badge>
+                  ))}
+                </div>
+                {/* Bio - truncated */}
+                <p className="text-sm text-muted-foreground line-clamp-2">{coach.bio}</p>
+              </div>
+
+              {/* Rate */}
+              <div className="shrink-0 text-right">
+                <span className="text-sm text-muted-foreground">From</span>
+                <div>
+                  <span className="text-2xl font-bold text-primary">${coach.hourlyRate}</span>
+                  <span className="text-muted-foreground text-sm">/hr</span>
+                </div>
+              </div>
             </div>
 
             <Separator />
 
-            {/* Specialties & Rate */}
-            <div className="flex items-center justify-between">
-              <div className="flex flex-wrap gap-2">
-                {coach.specialties.map((specialty) => (
-                  <Badge key={specialty} variant="secondary">
-                    {specialty}
-                  </Badge>
-                ))}
-              </div>
-              <div className="text-right">
-                <span className="text-2xl font-bold text-primary">${coach.hourlyRate}</span>
-                <span className="text-muted-foreground">/hr</span>
-              </div>
-            </div>
-
-            {/* Bio */}
-            <p className="text-muted-foreground leading-relaxed">{coach.bio}</p>
-
-            <Separator />
-
-            {/* Services Section */}
+            {/* Services & Booking */}
             <div>
-              <div className="flex items-center justify-between mb-3">
-                <h3 className="font-semibold flex items-center gap-2">
-                  <Calendar className="h-5 w-5 text-primary" />
-                  Services
-                </h3>
-                <span className="text-sm text-muted-foreground">{activeServices.length} available</span>
-              </div>
+              <h3 className="text-sm font-semibold mb-3">Services & Booking</h3>
 
               {activeServices.length > 0 ? (
-                <div className="grid gap-2">
-                  {activeServices.slice(0, 3).map((service) => (
+                <div className="space-y-2">
+                  {activeServices.slice(0, 4).map((service) => (
                     <div
                       key={service.id}
-                      className="flex items-center justify-between p-3 rounded-lg bg-muted/50 hover:bg-muted transition-colors"
+                      className="p-3 rounded-lg border bg-card hover:bg-accent/50 transition-colors"
                     >
-                      <div className="flex items-center gap-3">
-                        <div className={cn(
-                          'p-2 rounded-lg',
-                          service.type === 'session' ? 'bg-blue-100 text-blue-600' :
-                          service.type === 'program' ? 'bg-orange-100 text-orange-600' :
-                          'bg-purple-100 text-purple-600'
-                        )}>
-                          {service.type === 'session' ? <Clock className="h-4 w-4" /> :
-                           service.type === 'program' ? <Calendar className="h-4 w-4" /> :
-                           <Star className="h-4 w-4" />}
+                      {/* Service Header */}
+                      <div className="flex items-center justify-between mb-2">
+                        <div className="flex items-center gap-2">
+                          <div className={cn(
+                            'p-1.5 rounded-md',
+                            service.type === 'session' ? 'bg-blue-100 text-blue-600' :
+                            service.type === 'program' ? 'bg-orange-100 text-orange-600' :
+                            'bg-purple-100 text-purple-600'
+                          )}>
+                            {service.type === 'session' ? <Clock className="h-3.5 w-3.5" /> :
+                             service.type === 'program' ? <Calendar className="h-3.5 w-3.5" /> :
+                             <Star className="h-3.5 w-3.5" />}
+                          </div>
+                          <div>
+                            <p className="font-medium text-sm">{service.name}</p>
+                            <p className="text-xs text-muted-foreground">
+                              {service.duration} {service.durationUnit === 'minutes' ? 'min' : service.durationUnit}
+                            </p>
+                          </div>
                         </div>
-                        <div>
-                          <p className="font-medium text-sm">{service.name}</p>
-                          <p className="text-xs text-muted-foreground">
-                            {service.duration} {service.durationUnit === 'minutes' ? 'min' : service.durationUnit}
-                            {service.bundle && (
-                              <span className="ml-2 text-green-600">• Bundle available</span>
-                            )}
-                          </p>
-                        </div>
+                        <span className="font-semibold text-primary">${service.price}</span>
                       </div>
-                      <span className="font-semibold">${service.price}</span>
+
+                      {/* Available Times for this service */}
+                      {availableSlots.length > 0 ? (
+                        <div className="flex flex-wrap gap-1.5 mt-2 pt-2 border-t">
+                          {availableSlots.slice(0, 3).map((slot) => (
+                            <button
+                              key={slot.id}
+                              className="px-2 py-1 text-xs rounded-md border bg-background hover:bg-primary hover:text-primary-foreground hover:border-primary transition-colors"
+                            >
+                              {formatSlotDate(slot.date)} • {formatTime(slot.startTime)}
+                            </button>
+                          ))}
+                          <Link href={`/coaches/${coach.id}?tab=calendar`}>
+                            <button className="px-2 py-1 text-xs rounded-md border border-dashed border-primary/50 text-primary hover:bg-primary/10 transition-colors flex items-center gap-1">
+                              <Calendar className="h-3 w-3" />
+                              See full availability
+                            </button>
+                          </Link>
+                        </div>
+                      ) : (
+                        <div className="flex items-center gap-2 mt-2 pt-2 border-t">
+                          <p className="text-xs text-muted-foreground">
+                            Contact coach for availability
+                          </p>
+                          <Link href={`/coaches/${coach.id}?tab=calendar`}>
+                            <button className="px-2 py-1 text-xs rounded-md border border-dashed border-primary/50 text-primary hover:bg-primary/10 transition-colors flex items-center gap-1">
+                              <Calendar className="h-3 w-3" />
+                              View calendar
+                            </button>
+                          </Link>
+                        </div>
+                      )}
                     </div>
                   ))}
-                  {activeServices.length > 3 && (
-                    <p className="text-sm text-muted-foreground text-center py-1">
-                      +{activeServices.length - 3} more services
-                    </p>
-                  )}
                 </div>
               ) : (
                 <p className="text-sm text-muted-foreground py-2">No services listed yet.</p>
               )}
+              {activeServices.length > 4 && (
+                <Link href={`/coaches/${coach.id}`} className="block">
+                  <p className="text-xs text-primary text-center mt-3 hover:underline cursor-pointer">
+                    View all {activeServices.length} services →
+                  </p>
+                </Link>
+              )}
             </div>
-
-            {/* Availability Section */}
-            {availableSlots.length > 0 && (
-              <>
-                <Separator />
-                <div>
-                  <h3 className="font-semibold flex items-center gap-2 mb-3">
-                    <Clock className="h-5 w-5 text-primary" />
-                    Next Available
-                  </h3>
-                  <div className="flex flex-wrap gap-2">
-                    {availableSlots.map((slot) => (
-                      <Badge
-                        key={slot.id}
-                        variant="outline"
-                        className="px-3 py-1.5 text-sm cursor-pointer hover:bg-primary hover:text-primary-foreground transition-colors"
-                      >
-                        {formatSlotDate(slot.date)} • {formatTime(slot.startTime)}
-                      </Badge>
-                    ))}
-                  </div>
-                </div>
-              </>
-            )}
 
             {/* Content Section */}
             {(freeContent.length > 0 || premiumContent.length > 0) && (
@@ -337,7 +338,7 @@ export function CoachPreviewModal({ coach, isOpen, onClose, triggerRect }: Coach
                     Content
                   </h3>
                   <div className="grid grid-cols-2 gap-3">
-                    {[...freeContent, ...premiumContent].slice(0, 4).map((content) => (
+                    {[...freeContent, ...premiumContent].slice(0, 3).map((content) => (
                       <div
                         key={content.id}
                         className="group relative rounded-lg overflow-hidden bg-muted/50 hover:bg-muted transition-colors cursor-pointer"
@@ -379,6 +380,16 @@ export function CoachPreviewModal({ coach, isOpen, onClose, triggerRect }: Coach
                         </div>
                       </div>
                     ))}
+
+                    {/* View Content Library Card - styled like a video thumbnail */}
+                    <Link href={`/coaches/${coach.id}?tab=content`} className="block">
+                      <div className="group relative rounded-lg overflow-hidden bg-primary/10 hover:bg-primary/20 transition-colors cursor-pointer aspect-video flex flex-col items-center justify-center gap-2">
+                        <div className="p-3 rounded-full bg-primary/20 group-hover:bg-primary/30 transition-colors">
+                          <ChevronRight className="h-6 w-6 text-primary group-hover:translate-x-0.5 transition-transform" />
+                        </div>
+                        <p className="font-medium text-sm text-primary">View Content Library</p>
+                      </div>
+                    </Link>
                   </div>
                 </div>
               </>

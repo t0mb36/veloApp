@@ -10,6 +10,8 @@ export interface PublicCoachProfile {
   instagram?: string
   twitter?: string
   linkedin?: string
+  tiktok?: string
+  youtube?: string
   website?: string
   profileImage: string | null
   bannerImage: string | null
