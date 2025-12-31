@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import Link from 'next/link'
 import { Clock, CalendarRange, Sparkles, CreditCard, Mail, Calendar, ChevronRight, ShoppingCart } from 'lucide-react'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -243,10 +244,12 @@ export function ServicesBookingSection({
                             <Calendar className="h-4 w-4 text-primary" />
                             Select a time
                           </h4>
-                          <Button variant="ghost" size="sm" className="text-primary gap-1 h-auto py-1">
-                            View Full Calendar
-                            <ChevronRight className="h-4 w-4" />
-                          </Button>
+                          <Link href={`/coaches/${coachId}?tab=calendar`}>
+                            <Button variant="ghost" size="sm" className="text-primary gap-1 h-auto py-1">
+                              View Full Calendar
+                              <ChevronRight className="h-4 w-4" />
+                            </Button>
+                          </Link>
                         </div>
 
                         <div className="p-4 rounded-lg bg-muted/30 space-y-4">
@@ -267,14 +270,14 @@ export function ServicesBookingSection({
                                       </span>
                                     </div>
                                   )}
-                                  <div className="flex flex-wrap gap-1.5">
+                                  <div className="flex gap-1.5 overflow-x-auto pb-1 scrollbar-thin">
                                     {slots.map((slot) => (
                                       <button
                                         key={slot.id}
                                         onClick={() => slot.isAvailable && handleSlotSelect(service.id, slot.id)}
                                         disabled={!slot.isAvailable}
                                         className={cn(
-                                          'px-2.5 py-1 text-xs rounded-md border transition-colors',
+                                          'px-2.5 py-1 text-xs rounded-md border transition-colors shrink-0',
                                           !slot.isAvailable
                                             ? 'bg-muted text-muted-foreground/60 border-border cursor-not-allowed'
                                             : selectedSlotId === slot.id

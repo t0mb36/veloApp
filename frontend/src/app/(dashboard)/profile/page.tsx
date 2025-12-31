@@ -300,119 +300,106 @@ export default function ProfilePage() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 pb-8">
       {/* Main Content - 2/3 + 1/3 layout on large screens */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 lg:items-stretch">
         {/* Left Column - Profile Card (takes 2 columns on lg) */}
         <div className="lg:col-span-2 flex flex-col gap-6">
-          <Card className="lg:flex-1 flex flex-col">
-            <CardHeader>
-              <div className="flex items-center justify-between">
-                <CardTitle className="flex items-center gap-2 text-lg">
-                  <User className="h-5 w-5" />
-                  Profile
-                </CardTitle>
+          <Card className="lg:flex-1 flex flex-col overflow-hidden py-0">
+            <CardContent className="p-0 flex-1">
+              {/* Banner Image Upload with Overlapping Profile Picture */}
+              <div className="relative">
+                {/* Banner */}
+                <input
+                  ref={bannerInputRef}
+                  type="file"
+                  accept="image/*"
+                  onChange={handleBannerUpload}
+                  className="hidden"
+                />
+                <button
+                  onClick={() => bannerInputRef.current?.click()}
+                  className="relative w-full group cursor-pointer"
+                >
+                  <div className="w-full h-32 sm:h-40 overflow-hidden">
+                    {profile.bannerImage ? (
+                      <img
+                        src={profile.bannerImage}
+                        alt="Profile banner"
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      <div className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-primary/30 via-primary/20 to-primary/10">
+                        <ImageIcon className="h-8 w-8 text-primary/50" />
+                        <span className="text-sm text-primary/70 mt-2">
+                          Click to upload a banner
+                        </span>
+                      </div>
+                    )}
+                  </div>
+                  {/* Upload overlay on hover */}
+                  <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <Camera className="h-8 w-8 text-white" />
+                    <span className="text-white text-sm mt-1">
+                      {profile.bannerImage ? 'Change Banner' : 'Upload Banner'}
+                    </span>
+                  </div>
+                </button>
+
+                {/* View Public Profile button - floating on banner */}
                 {viewMode === 'coach' && (
-                  <Link href={`/coaches/c9a1f8e2-3b4d-5c6e-7f8a-9b0c1d2e3f4a`}>
-                    <Button variant="outline" size="sm" className="gap-2">
-                      <ExternalLink className="h-4 w-4" />
+                  <Link href={`/coaches/c9a1f8e2-3b4d-5c6e-7f8a-9b0c1d2e3f4a`} className="absolute top-3 right-3 z-10">
+                    <Button variant="secondary" size="sm" className="gap-1.5 shadow-md">
+                      <ExternalLink className="h-3.5 w-3.5" />
                       View Public Profile
                     </Button>
                   </Link>
                 )}
+
+                {/* Gradient overlay at bottom of banner */}
+                <div className="absolute bottom-0 left-0 right-0 h-16 bg-gradient-to-t from-background to-transparent pointer-events-none" />
               </div>
-            </CardHeader>
-            <CardContent className="space-y-6 flex-1">
-              {/* Banner Image Upload */}
-              {viewMode === 'coach' && (
-                <div className="space-y-2">
-                  <Label>Profile Banner</Label>
-                  <input
-                    ref={bannerInputRef}
-                    type="file"
-                    accept="image/*"
-                    onChange={handleBannerUpload}
-                    className="hidden"
-                  />
-                  <button
-                    onClick={() => bannerInputRef.current?.click()}
-                    className="relative w-full group cursor-pointer"
-                  >
-                    <div
-                      className={`w-full h-32 sm:h-40 rounded-lg overflow-hidden ${
-                        profile.bannerImage ? '' : 'border-2 border-dashed border-muted-foreground/30'
-                      }`}
+
+              {/* Profile Picture & Basic Info - Overlapping */}
+              <div className="relative -mt-12 px-6 pb-6">
+                <div className="flex flex-col sm:flex-row gap-4 sm:gap-6">
+                  {/* Avatar with Upload Overlay */}
+                  <div className="flex flex-col items-center sm:items-start">
+                    <input
+                      ref={fileInputRef}
+                      type="file"
+                      accept="image/*"
+                      onChange={handlePhotoUpload}
+                      className="hidden"
+                    />
+                    <button
+                      onClick={() => fileInputRef.current?.click()}
+                      className="relative group cursor-pointer"
                     >
-                      {profile.bannerImage ? (
-                        <img
-                          src={profile.bannerImage}
-                          alt="Profile banner"
-                          className="w-full h-full object-cover"
-                        />
-                      ) : (
-                        <div className="w-full h-full flex flex-col items-center justify-center bg-muted/50">
-                          <ImageIcon className="h-8 w-8 text-muted-foreground" />
-                          <span className="text-sm text-muted-foreground mt-2">
-                            Click to upload a banner image
-                          </span>
-                          <span className="text-xs text-muted-foreground/70 mt-1">
-                            Recommended: 1200 x 300 pixels
-                          </span>
-                        </div>
-                      )}
-                    </div>
-                    {/* Upload overlay on hover when banner exists */}
-                    {profile.bannerImage && (
-                      <div className="absolute inset-0 flex flex-col items-center justify-center rounded-lg bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity">
-                        <Camera className="h-8 w-8 text-white" />
-                        <span className="text-white text-sm mt-1">Change Banner</span>
+                      <Avatar className="h-24 w-24 sm:h-28 sm:w-28 border-4 border-background shadow-lg">
+                        <AvatarImage src={profile.profileImage || undefined} />
+                        <AvatarFallback className="text-2xl sm:text-3xl bg-primary text-primary-foreground">
+                          {getInitials()}
+                        </AvatarFallback>
+                      </Avatar>
+                      {/* Upload overlay - always visible when no photo, hover when photo exists */}
+                      <div
+                        className={`absolute inset-0 flex flex-col items-center justify-center rounded-full bg-black/50 transition-opacity ${
+                          profile.profileImage
+                            ? 'opacity-0 group-hover:opacity-100'
+                            : 'opacity-100'
+                        }`}
+                      >
+                        <Camera className="h-5 w-5 sm:h-6 sm:w-6 text-white" />
+                        <span className="text-white text-xs mt-1">
+                          {profile.profileImage ? 'Change' : 'Upload'}
+                        </span>
                       </div>
-                    )}
-                  </button>
-                </div>
-              )}
+                    </button>
+                  </div>
 
-              {viewMode === 'coach' && <Separator />}
-
-              {/* Profile Picture & Basic Info */}
-              <div className="flex flex-col sm:flex-row gap-6 sm:gap-8">
-                {/* Avatar with Upload Overlay */}
-                <div className="flex flex-col items-center">
-                  <input
-                    ref={fileInputRef}
-                    type="file"
-                    accept="image/*"
-                    onChange={handlePhotoUpload}
-                    className="hidden"
-                  />
-                  <button
-                    onClick={() => fileInputRef.current?.click()}
-                    className="relative group cursor-pointer"
-                  >
-                    <Avatar className="h-32 w-32 sm:h-40 sm:w-40 lg:h-48 lg:w-48">
-                      <AvatarImage src={profile.profileImage || undefined} />
-                      <AvatarFallback className="text-3xl sm:text-4xl lg:text-5xl bg-primary text-primary-foreground">
-                        {getInitials()}
-                      </AvatarFallback>
-                    </Avatar>
-                    {/* Upload overlay - always visible when no photo, hover when photo exists */}
-                    <div
-                      className={`absolute inset-0 flex flex-col items-center justify-center rounded-full bg-black/50 transition-opacity ${
-                        profile.profileImage
-                          ? 'opacity-0 group-hover:opacity-100'
-                          : 'opacity-100'
-                      }`}
-                    >
-                      <Camera className="h-6 w-6 sm:h-8 sm:w-8 text-white" />
-                      <span className="text-white text-xs sm:text-sm mt-1">
-                        {profile.profileImage ? 'Change' : 'Upload'}
-                      </span>
-                    </div>
-                  </button>
-                </div>
-
-                {/* Name, Location & Contact */}
-                <div className="flex-1 space-y-4">
+                  {/* Name, Location & Contact */}
+                  <div className="flex-1 space-y-4 pt-2 sm:pt-4">
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div className="space-y-2">
                       <Label htmlFor="firstName">First Name</Label>
@@ -477,7 +464,10 @@ export default function ProfilePage() {
                   </div>
                 </div>
               </div>
+              </div>
 
+              {/* Rest of form content */}
+              <div className="px-6 pb-6 space-y-6">
               <Separator />
 
               {/* Bio */}
@@ -585,6 +575,7 @@ export default function ProfilePage() {
                     </div>
                   </div>
                 </div>
+              </div>
               </div>
             </CardContent>
           </Card>

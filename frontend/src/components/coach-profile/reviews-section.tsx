@@ -1,23 +1,37 @@
 'use client'
 
 import { useState } from 'react'
-import { Star, CheckCircle, ChevronDown } from 'lucide-react'
+import { Star, CheckCircle, ChevronDown, PenLine } from 'lucide-react'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { format, parseISO } from 'date-fns'
 import type { CoachReview } from '@/types/coach'
+import { WriteReviewModal } from './write-review-modal'
+
+interface Service {
+  id: string
+  name: string
+}
 
 interface ReviewsSectionProps {
   reviews: CoachReview[]
   averageRating: number
   totalCount: number
+  coachName: string
+  services: Service[]
 }
 
-export function ReviewsSection({ reviews, averageRating, totalCount }: ReviewsSectionProps) {
+export function ReviewsSection({ reviews, averageRating, totalCount, coachName, services }: ReviewsSectionProps) {
   const [showAll, setShowAll] = useState(false)
+  const [isReviewModalOpen, setIsReviewModalOpen] = useState(false)
   const displayedReviews = showAll ? reviews : reviews.slice(0, 4)
+
+  const handleSubmitReview = (review: { rating: number; comment: string; serviceId: string | null; serviceName: string | null }) => {
+    // TODO: Implement actual review submission
+    console.log('Review submitted:', review)
+  }
 
   const getInitials = (name: string) => {
     return name
@@ -90,6 +104,15 @@ export function ReviewsSection({ reviews, averageRating, totalCount }: ReviewsSe
                 </div>
               ))}
             </div>
+
+            {/* Write Review Button */}
+            <Button
+              className="w-full mt-4 gap-2"
+              onClick={() => setIsReviewModalOpen(true)}
+            >
+              <PenLine className="h-4 w-4" />
+              Write a Review
+            </Button>
           </CardContent>
         </Card>
 
@@ -166,6 +189,15 @@ export function ReviewsSection({ reviews, averageRating, totalCount }: ReviewsSe
           )}
         </div>
       </div>
+
+      {/* Write Review Modal */}
+      <WriteReviewModal
+        isOpen={isReviewModalOpen}
+        onClose={() => setIsReviewModalOpen(false)}
+        coachName={coachName}
+        services={services}
+        onSubmit={handleSubmitReview}
+      />
     </section>
   )
 }
