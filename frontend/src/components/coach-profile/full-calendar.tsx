@@ -228,85 +228,89 @@ export function FullCalendar({
         </CardContent>
       </Card>
 
-      {/* Selected Date Details */}
+      {/* Services with Time Slots */}
       <div className="space-y-4">
-        {/* Service Selection */}
-        <Card>
-          <CardContent className="p-4">
-            <h3 className="font-semibold mb-3">Select Service</h3>
-            <div className="space-y-2">
-              {activeServices.map((service) => (
-                <button
-                  key={service.id}
-                  onClick={() => {
-                    setSelectedService(service.id)
-                    setSelectedSlot(null)
-                  }}
-                  className={cn(
-                    'w-full p-3 rounded-lg border text-left transition-colors',
-                    selectedService === service.id
-                      ? 'border-primary bg-primary/5'
-                      : 'hover:bg-accent'
-                  )}
-                >
-                  <div className="flex items-center justify-between">
-                    <span className="font-medium text-sm">{service.name}</span>
-                    <span className="text-sm text-primary font-semibold">
-                      ${service.price}
-                    </span>
+        <h3 className="font-semibold">
+          {selectedDate ? format(selectedDate, 'EEEE, MMMM d') : 'Select a date'}
+        </h3>
+
+        {activeServices.map((service) => {
+          const isSelected = selectedService === service.id
+
+          return (
+            <Card
+              key={service.id}
+              className={cn(
+                'transition-colors',
+                isSelected && 'border-primary'
+              )}
+            >
+              <CardContent className="p-4">
+                {/* Service Header */}
+                <div className="flex items-center justify-between mb-3">
+                  <div>
+                    <h4 className="font-medium">{service.name}</h4>
+                    <p className="text-xs text-muted-foreground">
+                      {service.duration} {service.durationUnit === 'minutes' ? 'min' : service.durationUnit}
+                      {service.type === 'group' && service.maxSeats && (
+                        <span className="ml-1">· Max {service.maxSeats} students</span>
+                      )}
+                    </p>
                   </div>
-                  <p className="text-xs text-muted-foreground mt-1">
-                    {service.duration} {service.durationUnit === 'minutes' ? 'min' : service.durationUnit}
+                  <span className="text-lg text-primary font-semibold">
+                    ${service.price}
+                  </span>
+                </div>
+
+                {/* Time Slots for this Service */}
+                {selectedDate ? (
+                  slotsForSelectedDate.length > 0 ? (
+                    <>
+                      <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-thin">
+                        {slotsForSelectedDate.map((slot) => {
+                          const isSlotSelected = selectedService === service.id && selectedSlot === slot.id
+                          return (
+                            <button
+                              key={slot.id}
+                              onClick={() => {
+                                setSelectedService(service.id)
+                                setSelectedSlot(slot.id)
+                              }}
+                              className={cn(
+                                'px-3 py-1.5 text-sm rounded-md border transition-colors shrink-0',
+                                isSlotSelected
+                                  ? 'bg-primary text-primary-foreground border-primary'
+                                  : 'hover:bg-accent'
+                              )}
+                            >
+                              {formatTime(slot.startTime)}
+                            </button>
+                          )
+                        })}
+                      </div>
+
+                      {/* Add to Cart Button - shows when slot selected for this service */}
+                      {isSelected && selectedSlot && (
+                        <Button className="w-full mt-3" onClick={handleAddToCart}>
+                          <ShoppingCart className="h-4 w-4 mr-2" />
+                          Add to Cart
+                        </Button>
+                      )}
+                    </>
+                  ) : (
+                    <p className="text-sm text-muted-foreground text-center py-2">
+                      No available times
+                    </p>
+                  )
+                ) : (
+                  <p className="text-sm text-muted-foreground text-center py-2">
+                    Select a date to see times
                   </p>
-                </button>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Time Slots */}
-        <Card>
-          <CardContent className="p-4">
-            <h3 className="font-semibold mb-3">
-              {selectedDate ? format(selectedDate, 'EEEE, MMMM d') : 'Select a date'}
-            </h3>
-
-            {selectedDate && slotsForSelectedDate.length > 0 ? (
-              <div className="grid grid-cols-3 gap-2">
-                {slotsForSelectedDate.map((slot) => (
-                  <button
-                    key={slot.id}
-                    onClick={() => setSelectedSlot(slot.id)}
-                    className={cn(
-                      'px-3 py-2 text-sm rounded-md border transition-colors',
-                      selectedSlot === slot.id
-                        ? 'bg-primary text-primary-foreground border-primary'
-                        : 'hover:bg-accent'
-                    )}
-                  >
-                    {formatTime(slot.startTime)}
-                  </button>
-                ))}
-              </div>
-            ) : selectedDate ? (
-              <p className="text-sm text-muted-foreground py-4 text-center">
-                No available times on this date
-              </p>
-            ) : (
-              <p className="text-sm text-muted-foreground py-4 text-center">
-                Select a date to see available times
-              </p>
-            )}
-
-            {/* Add to Cart Button */}
-            {selectedSlot && selectedService && (
-              <Button className="w-full mt-4" onClick={handleAddToCart}>
-                <ShoppingCart className="h-4 w-4 mr-2" />
-                Add to Cart
-              </Button>
-            )}
-          </CardContent>
-        </Card>
+                )}
+              </CardContent>
+            </Card>
+          )
+        })}
       </div>
     </div>
   )

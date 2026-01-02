@@ -30,53 +30,8 @@ import {
   ChevronUp,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
-
-// Function to create mock events with current date (called at runtime)
-function createMockEvents(today: Date): CalendarEvent[] {
-  return [
-    {
-      id: '1',
-      title: 'Morning Training Session',
-      time: '09:00 AM - 10:30 AM',
-      type: 'training' as const,
-      date: today,
-      location: 'Main Field',
-      with: 'Coach Johnson',
-      description: 'Focus on endurance and technique drills',
-    },
-    {
-      id: '2',
-      title: 'Team Meeting',
-      time: '02:00 PM - 03:00 PM',
-      type: 'meeting' as const,
-      date: today,
-      location: 'Conference Room A',
-      with: 'Team Captains',
-      description: 'Strategy discussion for upcoming tournament',
-    },
-    {
-      id: '3',
-      title: 'Evening Practice',
-      time: '05:00 PM - 06:30 PM',
-      type: 'training' as const,
-      date: today,
-      location: 'Training Facility',
-      with: 'Personal Trainer',
-      description: 'Strength and conditioning session',
-    },
-  ]
-}
-
-interface CalendarEvent {
-  id: string
-  title: string
-  time: string
-  type: 'training' | 'meeting' | 'other'
-  date: Date
-  location?: string
-  with?: string
-  description?: string
-}
+import type { CalendarEvent } from '@/types/calendar'
+import { createMockEvents } from '@/lib/mock-data/calendar'
 
 function getEventsForDate(date: Date, events: CalendarEvent[]): CalendarEvent[] {
   return events.filter((event) => isSameDay(event.date, date))

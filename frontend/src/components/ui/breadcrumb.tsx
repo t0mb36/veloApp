@@ -7,6 +7,7 @@ import { cn } from '@/lib/utils'
 export interface BreadcrumbItem {
   label: string
   href?: string
+  onClick?: () => void
 }
 
 interface BreadcrumbProps {
@@ -29,7 +30,14 @@ export function Breadcrumb({ items, className }: BreadcrumbProps) {
         {items.map((item, index) => (
           <li key={index} className="flex items-center gap-1.5">
             <ChevronRight className="h-4 w-4 text-muted-foreground/50" />
-            {item.href ? (
+            {item.onClick ? (
+              <button
+                onClick={item.onClick}
+                className="text-muted-foreground hover:text-foreground transition-colors"
+              >
+                {item.label}
+              </button>
+            ) : item.href ? (
               <Link
                 href={item.href}
                 className="text-muted-foreground hover:text-foreground transition-colors"

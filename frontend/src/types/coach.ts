@@ -86,10 +86,11 @@ export interface ServiceBundle {
 export interface CoachService {
   id: string
   name: string
-  type: 'session' | 'program' | 'custom'
+  type: 'session' | 'program' | 'custom' | 'group'
   price: number
   duration?: number
   durationUnit?: 'minutes' | 'weeks'
+  maxSeats?: number // For group lessons - max number of students
   bundle?: ServiceBundle
   description?: string
   isActive: boolean

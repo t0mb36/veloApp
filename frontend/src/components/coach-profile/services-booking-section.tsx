@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
-import { Clock, CalendarRange, Sparkles, CreditCard, Mail, Calendar, ChevronRight, ShoppingCart } from 'lucide-react'
+import { Clock, CalendarRange, Sparkles, CreditCard, Mail, Calendar, ChevronRight, ShoppingCart, Users } from 'lucide-react'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -141,6 +141,8 @@ export function ServicesBookingSection({
         return <CalendarRange className="h-5 w-5" />
       case 'custom':
         return <Sparkles className="h-5 w-5" />
+      case 'group':
+        return <Users className="h-5 w-5" />
     }
   }
 
@@ -152,6 +154,8 @@ export function ServicesBookingSection({
         return 'bg-orange-100 text-orange-600'
       case 'custom':
         return 'bg-purple-100 text-purple-600'
+      case 'group':
+        return 'bg-green-100 text-green-600'
     }
   }
 
@@ -198,6 +202,12 @@ export function ServicesBookingSection({
                           {service.type === 'session' && `${service.duration} min`}
                           {service.type === 'program' && `${service.duration} week program`}
                           {service.type === 'custom' && service.duration && `${service.duration} min`}
+                          {service.type === 'group' && (
+                            <>
+                              {service.duration} min
+                              {service.maxSeats && ` · Max ${service.maxSeats} students`}
+                            </>
+                          )}
                         </p>
                       </div>
                       <p className="text-xl font-bold text-primary">${service.price}</p>
