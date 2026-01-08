@@ -13,7 +13,7 @@ export const DURATION_OPTIONS = [30, 45, 60, 90]
 export const mockServices: CoachService[] = [
   {
     id: 'a3bb189e-8bf9-4f8d-9c85-f7a3b8d4e2c1',
-    name: 'Private Lesson',
+    name: 'Private Session',
     type: 'session',
     duration: 60,
     price: 85,
@@ -93,7 +93,7 @@ export const mockPrograms: Program[] = [
   },
 ]
 
-// Mock completed lessons data
+// Mock completed sessions data
 export const mockCompletedLessons: CompletedLesson[] = [
   {
     id: 'f47ac10b-58cc-4372-a567-0e02b2c3d479',
@@ -101,7 +101,7 @@ export const mockCompletedLessons: CompletedLesson[] = [
     studentName: 'Alex Johnson',
     studentAvatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Alex',
     serviceId: 'a3bb189e-8bf9-4f8d-9c85-f7a3b8d4e2c1',
-    serviceName: 'Private Lesson',
+    serviceName: 'Private Session',
     serviceType: 'session',
     date: '2024-12-30T10:00:00',
     duration: 60,
@@ -117,7 +117,7 @@ export const mockCompletedLessons: CompletedLesson[] = [
     studentName: 'Maria Garcia',
     studentAvatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Maria',
     serviceId: 'a3bb189e-8bf9-4f8d-9c85-f7a3b8d4e2c1',
-    serviceName: 'Private Lesson',
+    serviceName: 'Private Session',
     serviceType: 'session',
     date: '2024-12-29T14:00:00',
     duration: 60,
@@ -145,7 +145,7 @@ export const mockCompletedLessons: CompletedLesson[] = [
     studentName: 'Alex Johnson',
     studentAvatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Alex',
     serviceId: 'a3bb189e-8bf9-4f8d-9c85-f7a3b8d4e2c1',
-    serviceName: 'Private Lesson',
+    serviceName: 'Private Session',
     serviceType: 'session',
     date: '2024-12-27T10:00:00',
     duration: 60,

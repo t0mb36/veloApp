@@ -66,12 +66,12 @@ import {
   List,
 } from 'lucide-react'
 
-type TabKey = 'services' | 'programs' | 'lessons' | 'content' | 'analytics'
+type TabKey = 'services' | 'programs' | 'sessions' | 'content' | 'analytics'
 type ServiceType = 'session' | 'program' | 'custom' | 'group'
 
 const tabs: { key: TabKey; label: string; icon: React.ElementType; available: boolean }[] = [
   { key: 'services', label: 'Services & Pricing', icon: DollarSign, available: true },
-  { key: 'lessons', label: 'Lessons', icon: FileText, available: true },
+  { key: 'sessions', label: 'Sessions', icon: FileText, available: true },
   { key: 'programs', label: 'Programs', icon: BookOpen, available: true },
   { key: 'content', label: 'Content', icon: Layers, available: true },
   { key: 'analytics', label: 'Analytics', icon: BarChart3, available: false },
@@ -85,7 +85,7 @@ interface ServiceFormData {
   customDuration: string
   programWeeks: string
   customServiceDuration: string // optional duration for custom services
-  maxSeats: string // for group lessons
+  maxSeats: string // for group sessions
   description: string
   isActive: boolean
   // Bundle option for sessions
@@ -131,9 +131,9 @@ export default function StudioPage() {
   const [editingServiceId, setEditingServiceId] = useState<string | null>(null)
   const [formData, setFormData] = useState<ServiceFormData>(emptyFormData)
 
-  // Lessons state
-  const [lessons] = useState<CompletedLesson[]>(mockCompletedLessons)
-  const [lessonSearchQuery, setLessonSearchQuery] = useState('')
+  // Sessions state
+  const [sessions] = useState<CompletedLesson[]>(mockCompletedLessons)
+  const [sessionSearchQuery, setSessionSearchQuery] = useState('')
 
   // Programs state
   const [programs] = useState<Program[]>(mockPrograms)
@@ -295,18 +295,18 @@ export default function StudioPage() {
     // Custom: always valid (duration is optional)
     true
 
-  // Lessons helpers
-  const filteredLessons = lessons.filter((lesson) =>
-    lesson.studentName.toLowerCase().includes(lessonSearchQuery.toLowerCase()) ||
-    lesson.serviceName.toLowerCase().includes(lessonSearchQuery.toLowerCase())
+  // Sessions helpers
+  const filteredSessions = sessions.filter((session) =>
+    session.studentName.toLowerCase().includes(sessionSearchQuery.toLowerCase()) ||
+    session.serviceName.toLowerCase().includes(sessionSearchQuery.toLowerCase())
   )
 
-  const formatLessonDate = (dateStr: string) => {
+  const formatSessionDate = (dateStr: string) => {
     const date = new Date(dateStr)
     return date.toLocaleDateString([], { month: 'short', day: 'numeric', year: 'numeric' })
   }
 
-  const formatLessonTime = (dateStr: string) => {
+  const formatSessionTime = (dateStr: string) => {
     const date = new Date(dateStr)
     return date.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })
   }
@@ -1094,8 +1094,8 @@ export default function StudioPage() {
         </div>
       )}
 
-      {/* Lessons Tab */}
-      {activeTab === 'lessons' && (
+      {/* Sessions Tab */}
+      {activeTab === 'sessions' && (
         <div className="space-y-4">
           {/* Table Controls */}
           <div className="flex items-center gap-2">
@@ -1103,8 +1103,8 @@ export default function StudioPage() {
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
                 placeholder="Search..."
-                value={lessonSearchQuery}
-                onChange={(e) => setLessonSearchQuery(e.target.value)}
+                value={sessionSearchQuery}
+                onChange={(e) => setSessionSearchQuery(e.target.value)}
                 className="pl-9 h-9"
               />
             </div>
@@ -1118,14 +1118,14 @@ export default function StudioPage() {
             </Button>
           </div>
 
-          {/* Lessons Table */}
+          {/* Sessions Table */}
           <Card>
             <CardContent className="p-0">
-              {filteredLessons.length === 0 ? (
+              {filteredSessions.length === 0 ? (
                 <div className="py-12 text-center">
                   <FileText className="h-10 w-10 mx-auto text-muted-foreground/50" />
                   <p className="mt-3 text-sm text-muted-foreground">
-                    {lessonSearchQuery ? 'No lessons match your search' : 'No completed lessons yet'}
+                    {sessionSearchQuery ? 'No sessions match your search' : 'No completed sessions yet'}
                   </p>
                 </div>
               ) : (
@@ -1143,28 +1143,28 @@ export default function StudioPage() {
                       </tr>
                     </thead>
                     <tbody>
-                      {filteredLessons.map((lesson) => (
+                      {filteredSessions.map((session) => (
                         <tr
-                          key={lesson.id}
+                          key={session.id}
                           className="border-b last:border-0 hover:bg-muted/30 transition-colors cursor-pointer"
-                          onClick={() => router.push(`/studio/lessons/${lesson.id}`)}
+                          onClick={() => router.push(`/studio/sessions/${session.id}`)}
                         >
                           <td className="px-4 py-3">
                             <div className="flex items-center gap-2.5">
                               <div className="h-7 w-7 rounded-full bg-muted overflow-hidden shrink-0">
-                                {lesson.studentAvatar ? (
+                                {session.studentAvatar ? (
                                   <img
-                                    src={lesson.studentAvatar}
-                                    alt={lesson.studentName}
+                                    src={session.studentAvatar}
+                                    alt={session.studentName}
                                     className="h-full w-full object-cover"
                                   />
                                 ) : (
                                   <div className="h-full w-full flex items-center justify-center text-xs font-medium">
-                                    {lesson.studentName.charAt(0)}
+                                    {session.studentName.charAt(0)}
                                   </div>
                                 )}
                               </div>
-                              <span className="text-sm font-medium">{lesson.studentName}</span>
+                              <span className="text-sm font-medium">{session.studentName}</span>
                             </div>
                           </td>
                           <td className="px-4 py-3">
@@ -1172,44 +1172,44 @@ export default function StudioPage() {
                               variant="secondary"
                               className={cn(
                                 'text-xs font-normal',
-                                lesson.serviceType === 'session' && 'bg-blue-100 text-blue-700',
-                                lesson.serviceType === 'group' && 'bg-green-100 text-green-700',
-                                lesson.serviceType === 'program' && 'bg-orange-100 text-orange-700',
-                                lesson.serviceType === 'custom' && 'bg-purple-100 text-purple-700'
+                                session.serviceType === 'session' && 'bg-blue-100 text-blue-700',
+                                session.serviceType === 'group' && 'bg-green-100 text-green-700',
+                                session.serviceType === 'program' && 'bg-orange-100 text-orange-700',
+                                session.serviceType === 'custom' && 'bg-purple-100 text-purple-700'
                               )}
                             >
-                              {lesson.serviceName}
+                              {session.serviceName}
                             </Badge>
                           </td>
                           <td className="px-4 py-3 text-sm text-muted-foreground">
-                            {formatLessonDate(lesson.date)}
+                            {formatSessionDate(session.date)}
                           </td>
                           <td className="px-4 py-3 text-sm text-muted-foreground">
-                            {formatLessonTime(lesson.date)}
+                            {formatSessionTime(session.date)}
                           </td>
                           <td className="px-4 py-3 text-sm text-muted-foreground">
-                            {lesson.duration} min
+                            {session.duration} min
                           </td>
                           <td className="px-4 py-3">
-                            {lesson.attachments.length > 0 ? (
+                            {session.attachments.length > 0 ? (
                               <div className="flex items-center gap-1.5 text-muted-foreground">
-                                {lesson.attachments.some((a) => a.type === 'photo') && (
+                                {session.attachments.some((a) => a.type === 'photo') && (
                                   <Image className="h-3.5 w-3.5" />
                                 )}
-                                {lesson.attachments.some((a) => a.type === 'video') && (
+                                {session.attachments.some((a) => a.type === 'video') && (
                                   <Video className="h-3.5 w-3.5" />
                                 )}
-                                {lesson.attachments.some((a) => a.type === 'note') && (
+                                {session.attachments.some((a) => a.type === 'note') && (
                                   <MessageSquare className="h-3.5 w-3.5" />
                                 )}
-                                <span className="text-xs">({lesson.attachments.length})</span>
+                                <span className="text-xs">({session.attachments.length})</span>
                               </div>
                             ) : (
                               <span className="text-xs text-muted-foreground/50">—</span>
                             )}
                           </td>
                           <td className="px-4 py-3">
-                            <Link href={`/studio/lessons/${lesson.id}`}>
+                            <Link href={`/studio/sessions/${session.id}`}>
                               <Button variant="ghost" size="icon" className="h-7 w-7">
                                 <ChevronRight className="h-4 w-4" />
                               </Button>

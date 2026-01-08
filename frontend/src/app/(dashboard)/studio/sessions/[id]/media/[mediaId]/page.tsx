@@ -35,63 +35,63 @@ import {
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
-// Mock data - would come from lesson context/API
+// Mock data - would come from session context/API
 const mockMedia: Record<string, {
   id: string
-  lessonId: string
+  sessionId: string
   type: 'video' | 'photo'
   url: string
   thumbnail?: string
   title: string
   studentName: string
-  lessonDate: string
+  sessionDate: string
 }> = {
   'vid-001': {
     id: 'vid-001',
-    lessonId: 'f47ac10b-58cc-4372-a567-0e02b2c3d479',
+    sessionId: 'f47ac10b-58cc-4372-a567-0e02b2c3d479',
     type: 'video',
     url: '/videos/forehand-drill.mp4',
     thumbnail: 'https://placehold.co/800x450/1a1a2e/ffffff?text=Forehand+Drill',
     title: 'Forehand Drill',
     studentName: 'Alex Johnson',
-    lessonDate: '2024-12-30',
+    sessionDate: '2024-12-30',
   },
   'vid-002': {
     id: 'vid-002',
-    lessonId: 'f47ac10b-58cc-4372-a567-0e02b2c3d479',
+    sessionId: 'f47ac10b-58cc-4372-a567-0e02b2c3d479',
     type: 'video',
     url: '/videos/backhand.mp4',
     thumbnail: 'https://placehold.co/800x450/1a1a2e/ffffff?text=Backhand+Form',
     title: 'Backhand Form Check',
     studentName: 'Alex Johnson',
-    lessonDate: '2024-12-30',
+    sessionDate: '2024-12-30',
   },
   'photo-001': {
     id: 'photo-001',
-    lessonId: 'f47ac10b-58cc-4372-a567-0e02b2c3d479',
+    sessionId: 'f47ac10b-58cc-4372-a567-0e02b2c3d479',
     type: 'photo',
     url: 'https://placehold.co/800x600/1a1a2e/ffffff?text=Ready+Position',
     title: 'Ready Position',
     studentName: 'Alex Johnson',
-    lessonDate: '2024-12-30',
+    sessionDate: '2024-12-30',
   },
   'photo-002': {
     id: 'photo-002',
-    lessonId: 'f47ac10b-58cc-4372-a567-0e02b2c3d479',
+    sessionId: 'f47ac10b-58cc-4372-a567-0e02b2c3d479',
     type: 'photo',
     url: 'https://placehold.co/800x600/1a1a2e/ffffff?text=Grip+Check',
     title: 'Grip Check',
     studentName: 'Alex Johnson',
-    lessonDate: '2024-12-30',
+    sessionDate: '2024-12-30',
   },
   'photo-003': {
     id: 'photo-003',
-    lessonId: '550e8400-e29b-41d4-a716-446655440000',
+    sessionId: '550e8400-e29b-41d4-a716-446655440000',
     type: 'photo',
     url: 'https://placehold.co/800x600/1a1a2e/ffffff?text=Serve+Stance',
     title: 'Serve Stance',
     studentName: 'Maria Garcia',
-    lessonDate: '2024-12-29',
+    sessionDate: '2024-12-29',
   },
 }
 
@@ -108,7 +108,7 @@ const annotationColors = [
 export default function MediaAnnotationPage() {
   const params = useParams()
   const router = useRouter()
-  const lessonId = params.id as string
+  const sessionId = params.id as string
   const mediaId = params.mediaId as string
 
   const media = mockMedia[mediaId]
@@ -129,8 +129,8 @@ export default function MediaAnnotationPage() {
         <FileText className="h-16 w-16 text-muted-foreground/30" />
         <h2 className="text-xl font-semibold">Media not found</h2>
         <p className="text-muted-foreground">The media you're looking for doesn't exist.</p>
-        <Link href={`/studio/lessons/${lessonId}`} className="text-primary hover:underline text-sm">
-          Back to Lesson
+        <Link href={`/studio/sessions/${sessionId}`} className="text-primary hover:underline text-sm">
+          Back to Session
         </Link>
       </div>
     )
@@ -158,11 +158,11 @@ export default function MediaAnnotationPage() {
           Studio
         </Link>
         <ChevronRight className="h-3.5 w-3.5" />
-        <Link href="/studio?tab=lessons" className="hover:text-foreground transition-colors">
-          Lessons
+        <Link href="/studio?tab=sessions" className="hover:text-foreground transition-colors">
+          Sessions
         </Link>
         <ChevronRight className="h-3.5 w-3.5" />
-        <Link href={`/studio/lessons/${lessonId}`} className="hover:text-foreground transition-colors">
+        <Link href={`/studio/sessions/${sessionId}`} className="hover:text-foreground transition-colors">
           {media.studentName}
         </Link>
         <ChevronRight className="h-3.5 w-3.5" />
@@ -354,7 +354,7 @@ export default function MediaAnnotationPage() {
                 </div>
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Date</span>
-                  <span>{new Date(media.lessonDate).toLocaleDateString()}</span>
+                  <span>{new Date(media.sessionDate).toLocaleDateString()}</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Type</span>
@@ -387,10 +387,10 @@ export default function MediaAnnotationPage() {
                 <Download className="h-3.5 w-3.5" />
                 Download Original
               </Button>
-              <Link href={`/studio/lessons/${lessonId}`} className="block">
+              <Link href={`/studio/sessions/${sessionId}`} className="block">
                 <Button variant="outline" size="sm" className="w-full justify-start gap-2 h-8 text-xs">
                   <ChevronLeft className="h-3.5 w-3.5" />
-                  Back to Lesson
+                  Back to Session
                 </Button>
               </Link>
             </CardContent>
